@@ -1,0 +1,10 @@
+name = "SecularResponse"
+uuid = "87b82f86-6683-4f25-a237-b4c96fd87469"
+authors = ["Mathieu Roule <roule@iap.fr>"]
+version = "0.1.0"
+
+[deps]
+AstroBasis = "f9f069e8-36d3-4f22-8c0d-26ca7e8540d8"
+CallAResponse = "b55f3ae4-0c12-11ed-076a-67f81ab2b5b1"
+FiniteHilbertTransform = "68cdf181-988b-4042-8999-0b9541c1c3c2"
+OrbitalElements = "a3b07092-bde3-4843-b84f-c597d614ec7b"
