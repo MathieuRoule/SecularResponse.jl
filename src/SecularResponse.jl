@@ -8,7 +8,11 @@ import CallAResponse as CAR
 using LinearAlgebra
 using HDF5
 
+include("utils/ResonancesPair.jl")
+include("utils/Parameters.jl")
+
 include("CouplingCoef.jl")
+
 include("Prediction.jl")
 
 end # module

@@ -1,42 +1,70 @@
 
 
+struct BalescuLenardCoupling
 
+    name::String 
 
-"""
-    BalescuLenardCC(k,k',J,J',ω)
+    basis::AB.Basis_type
+    UFT::Array{Float64}
+    UFTp::Array{Float64}
 
-Balescu-Lenard coupling coefficient
-"""
-function BalescuLenardCC(k1::Int64,k2::Int64,
-                         k1p::Int64,k2p::Int64,
-                         lharmonic::Int64,
-                         a::Float64,e::Float64,
-                         Ω1::Float64,Ω2::Float64,
-                         ap::Float64,ep::Float64,
-                         Ω1p::Float64,Ω2p::Float64,
-                         basis::Float64,
-                         ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,
-                         RM::RespMat,
-                         ω::Float64;
-                         Kw::Int64=50
-                         EDGE::Float64=0.03,
-                         VERBOSE::Int64=0,
-                         KuTruncation::Int64=10000)
+    aMcoef::Array{Float64,4}
+    M::Matrix{Complex{Float64}}
+    Xi::Matrix{Complex{Float64}}
 
-    FTk = zeros(Float64,basis.nmax)
-    FTkp = zeros(Float64,basis.nmax)
-    
-    # Computing the basis FT (k,J) and (k',J')
-    CAR.WBasisFT(a,e,Ω1,Ω2,k1,k2,lharmonic,basis,ψ,dψ,d2ψ,d3ψ,FTk;Kw=Kw,EDGE=EDGE,VERBOSE=VERBOSE)
-    CAR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,lharmonic,basis,ψ,dψ,d2ψ,d3ψ,FTkp;Kw=Kw,EDGE=EDGE,VERBOSE=VERBOSE)
+end
+
+function BalescuLenardCouplingCreate(basis::AB.Basis_type, params::CAR.Parameters;name::String="BalescuLenard")
+
+    return BalescuLenardCoupling()
+end
+
+function CCPrepare!(a::Float64,e::Float64,
+                    Ω1::Float64,Ω2::Float64,
+                    k1::Int64,k2::Int64,
+                    lharmonic::Int64,
+                    ω::Float64,
+                    ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,
+                    coupling::BalescuLenardCoupling,
+                    params::Parameters)
+
+    # Computing the basis FT (k,J)
+    CAR.WBasisFT(a,e,Ω1,Ω2,k1,k2,lharmonic,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFT,params.CARparams)
 
     # Computing the response matrix
-    tabM!(ω,RM.tabM,RM.tabaMcoef,RM.tabResVec,RM.tabnpnq,RM.FHT,dψ,d2ψ,basis.nmax,RM.Ω₀,rmin,rmax;VERBOSE=VERBOSE,KuTruncation=KuTruncation)
+    tabM!(ω,coupling.M,coupling.aMcoef,coupling.tabResVec,coupling.tabnpnq,RM.FHT,dψ,d2ψ,basis.nmax,params.CARparams)
     tabXi = inv(Symmetric(RM.IMat - RM.tabM)) # @ TO IMPROVE -- in place
+
+    for j = 1:params.nradial
+        for i = 1:params.nradial
+            coupling.Xi[i,j] = tabXi[i,j]
+        end
+    end
+end
+
+
+function CouplingCoefficient(a::Float64,e::Float64,
+                             Ω1::Float64,Ω2::Float64,
+                             ap::Float64,ep::Float64,
+                             Ω1p::Float64,Ω2p::Float64,
+                             k1::Int64,k2::Int64,
+                             k1p::Int64,k2p::Int64,
+                             lharmonic::Int64,
+                             ω::Float64,
+                             ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,
+                             coupling::BalescuLenardCoupling,
+                             params::Parameters)
+
+    """
+    @ASSUMING the (k,J) part has been prepared
+    """
+    # Computing the basis FT (k',J')
+    CAR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,lharmonic,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFT,params.CARparams)
+
     res = 0.
-    for j = 1:basis.nmax
-        for i = 1:basis.nmax
-            res -= FTk[i] * tabXi[i,j] * FTkp[j]
+    for j = 1:params.nradial
+        for i = 1:params.nradial
+            res -= FTk[i] * coupling.Xi[i,j] * FTkp[j]
         end
     end
     return res

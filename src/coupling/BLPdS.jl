@@ -1,22 +1,49 @@
 
 
+struct BLPdSCoupling
+
+    name::String 
+
+    LandauMultipole::LandauMultipoleCoupling
+    LandauBasis::LandauBasisCoupling
+    BalescuLenard::BalescuLenardCoupling
+end
+
+function BLPdSCouplingCreate(LandauMultipole::LandauMultipoleCoupling,LandauBasis::LandauBasisCoupling,BalescuLenard::BalescuLenardCoupling;name::String="BL-PdS")
+
+    return BLPdSCoupling(name,LandauMultipole,LandauBasis,BalescuLenard)
+end
 
 
-"""
-    BLPdSCC(k,k',J,J',ω)
+function CCPrepare!(a::Float64,e::Float64,
+                    Ω1::Float64,Ω2::Float64,
+                    k1::Int64,k2::Int64,
+                    lharmonic::Int64,
+                    ω::Float64,
+                    ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,
+                    coupling::BLPdSCoupling,
+                    params::Parameters)
 
-Balescu-Lenard coupling coefficient using 'Pain de Sucre' method
-"""
-function BLPdSCC(k1::Int64,k2::Int64,
-                 k1p::Int64,k2p::Int64,
-                 a::Float64,e::Float64,
-                 ap::Float64,ep::Float64,
-                 ω::Float64,
-                 basis::AB.Basis_type;
-                 VERBOSE::Int64=0)
+    CCPrepare!(a,e,Ω1,Ω2,k1,k2,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,coupling.LandauMultipole,params)
+    CCPrepare!(a,e,Ω1,Ω2,k1,k2,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,coupling.LandauBasis,params)
+    CCPrepare!(a,e,Ω1,Ω2,k1,k2,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,coupling.BalescuLenard,params)
+end
 
-    psidBL = BalescuLenardCC(k1,k2,k1p,k2p,lharmonic,a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,basis,ω;VERBOSE=VERBOSE)
-    psiMulti = LandauMultipoleCC(k1,k2,k1p,k2p,lharmonic,a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,basis;VERBOSE=VERBOSE)
-    psiBasis = LandauBasisCC(kk1,k2,k1p,k2p,lharmonic,a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,basis;VERBOSE=VERBOSE)
-    return psidBL + psiMulti - psiBasis # "Pain de Sucre"
+function CouplingCoefficient(a::Float64,e::Float64,
+                             Ω1::Float64,Ω2::Float64,
+                             ap::Float64,ep::Float64,
+                             Ω1p::Float64,Ω2p::Float64,
+                             k1::Int64,k2::Int64,
+                             k1p::Int64,k2p::Int64,
+                             lharmonic::Int64,
+                             ω::Float64,
+                             ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,
+                             coupling::BLPdSCoupling,
+                             params::Parameters)
+
+    psiMulti = CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,coupling.LandauMultipole,params)
+    psiBasis = CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,coupling.LandauBasis,params)
+    psidBL   = CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,coupling.BalescuLenard,params)
+
+    return psidBL + (psiMulti - psiBasis) # "Pain de Sucre"
 end
