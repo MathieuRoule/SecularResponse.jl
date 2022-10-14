@@ -47,7 +47,7 @@ end
 """
 Container of the ((n1,n2),(n1p,n2p)) resonance pairs to consider
 """
-function MakeTabResVec3d(lmax::Int64,n1max::Int64)
+function MakeTabResPair3d(lmax::Int64,n1max::Int64)
 
     # calculate the number
     nbResPair = GetNbResPair(lmax,n1max,3)
@@ -91,37 +91,38 @@ end
 
 
 """
-Container of the ((n1,n2),(n1p,n2p)) resonance pair to consider
+Container of the ((k1,k2),(k1p,k2p)) resonance pair to consider
 
 @IMPROVE it would be best to use the same code as in get_nbResVec()
 """
-function MakeTabResVec2d(lharmonic::Int64,n1max::Int64)
+function MakeTabResPair2d(lharmonic::Int64,k1max::Int64)
     # calculate the number
-    nbResPair = GetNbResPair(lmax,n1max,2)
+    nbResPair = GetNbResPair(lharmonic,k1max,2)
     # Create container array
     tabResPair = zeros(Int64,4,nbResPair)
     count = 1 # Initialisation of the counter
     #####
     if lharmonic == 0 # n1 == 0 not contributing
-        for n1 = 1:n1max
-            for n1p = 1:n1max
-                tabResPair[1,count], tabResPair[2,count], tabResPair[3,count], tabResPair[4,count] = n1, lharmonic, n1p, lharmonic
+        for k1 = 1:k1max
+            for k1p = 1:k1max
+                tabResPair[1,count], tabResPair[2,count], tabResPair[3,count], tabResPair[4,count] = k1, lharmonic, k1p, lharmonic
                 count += 1
-                tabResPair[1,count], tabResPair[2,count], tabResPair[3,count], tabResPair[4,count] = -n1, lharmonic, n1p, lharmonic
+                tabResPair[1,count], tabResPair[2,count], tabResPair[3,count], tabResPair[4,count] = -k1, lharmonic, k1p, lharmonic
                 count += 1
-                tabResPair[1,count], tabResPair[2,count], tabResPair[3,count], tabResPair[4,count] = n1, lharmonic, -n1p, lharmonic
+                tabResPair[1,count], tabResPair[2,count], tabResPair[3,count], tabResPair[4,count] = k1, lharmonic, -k1p, lharmonic
                 count += 1
-                tabResPair[1,count], tabResPair[2,count], tabResPair[3,count], tabResPair[4,count] = -n1, lharmonic, -n1p, lharmonic
+                tabResPair[1,count], tabResPair[2,count], tabResPair[3,count], tabResPair[4,count] = -k1, lharmonic, -k1p, lharmonic
                 count += 1
             end
         end
     else
-        for n1 = -n1max:n1max
-            for n1p = -n1max:n1max
-                tabResPair[1,count], tabResPair[2,count], tabResPair[3,count], tabResPair[4,count] = n1, lharmonic, n1p, lharmonic
+        for k1 = -k1max:k1max
+            for k1p = -k1max:k1max
+                # lharmonic
+                tabResPair[1,count], tabResPair[2,count], tabResPair[3,count], tabResPair[4,count] = k1, lharmonic, k1p, lharmonic
                 count += 1
             end
         end
     end
-    return nbResVec, tabResVec
+    return nbResPair, tabResPair
 end
