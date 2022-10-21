@@ -103,31 +103,6 @@ function GetSecularResContrib(a::Float64,e::Float64,
     return fric, diff, flux
 end
 
-# """
-#     GetSecularResContrib(J,k,k')
-
-# Resonances (k,kp) contribution to the secular evolution.
-# """
-# function GetSecularResContrib(a::Float64,e::Float64,
-#                                 k1::Int64,k2::Int64,
-#                                 k1p::Int64,k2p::Int64,
-#                                 lharmonic::Int64,
-#                                 ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,βc::Function,
-#                                 DF::Function,ndFdJ::Function,
-#                                 coupling::CouplingType,
-#                                 params::Parameters)
-
-#     # Considered a, e : associated frequencies/actions
-#     Ω1, Ω2, J = OE.ComputeFrequenciesAE(ψ,dψ,d2ψ,d3ψ,d4ψ,a,e;action=true,TOLECC=params.CARparams.ELTOLECC,NINT=params.CARparams.NINT,EDGE=params.CARparams.EDGE)
-#     L = OE.LFromAE(ψ,dψ,d2ψ,d3ψ,a,e,TOLECC=params.CARparams.ELTOLECC)
-
-#     fric, diff, flux = GetSecularResContrib(a,e,Ω1,Ω2,k1,k2,k1p,k2p,lharmonic,
-#                                             ψ,dψ,d2ψ,d3ψ,βc,DF,ndFdJ,
-#                                             coupling,params)
-
-#     return J, L, fric, diff, flux
-# end
-
 """SecularPrefactors
 """
 function SecularPrefactors(Mtot::Float64,N::Int64,dim::Int64)

@@ -1,10 +1,10 @@
 
 
-include("../../../JuliaCallAResponse/examples/MestelZang/SellwoodStable.jl")
+include("./SellwoodStableCAR.jl")
 
 import SecularResponse
 
-SRparams = SecularResponse.ParametersCreate(params,basis,n1max=1,VERBOSE=1)
+SRparams = SecularResponse.ParametersCreate(params,basis,n1max=1,VERBOSE=0)
 
 const coupling = SecularResponse.BalescuLenardCouplingCreate(basis,FHT,params)
 # const coupling = SecularResponse.LandauBasisCouplingCreate(basis)

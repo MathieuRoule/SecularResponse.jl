@@ -8,11 +8,20 @@ all steps combined into one: could pause and restart if this was too much.
 inputfile = "SellwoodStable.jl"
 include(inputfile)
 
-a, e = 0.8, 0.8
+Amin, Amax, nA = 0.3, 2.0, 100
+Emin, Emax, nE = 0.0, 0.7, 101
 
-J, L, totfric, totdiff, totflux = SecularResponse.GetSecular(a,e,ψ,dψ,d2ψ,d3ψ,d4ψ,βc,DF,ndFdJ,coupling,SRparams)
+tabAE = SecularResponse.AEgrid(Amin,Amax,nA,Emin,Emax,nE)
 
-println("J, L = $J, $L")
-println("Friction = ",totfric)
-println("Diffusion = ",totdiff)
-println("Flux = ",totflux)
+tabJL, totfric, totdiff, totflux = SecularResponse.GetSecular(tabAE,ψ,dψ,d2ψ,d3ψ,d4ψ,βc,DF,ndFdJ,coupling,SRparams)
+
+
+using HDF5
+
+filename = "Jldomain.hf5"
+h5open(filename,"w") do file
+    write(file,"tabJL",tabJL)
+    write(file,"totfric",totfric)
+    write(file,"totdiff",totdiff)
+    write(file,"totflux",totflux)
+end
