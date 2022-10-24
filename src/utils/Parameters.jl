@@ -22,7 +22,7 @@ struct Parameters
 end
 
 function ParametersCreate(CARparams::CAR.ResponseParameters,
-                          basis::AB.Basis_type;
+                          basis::AB.BasisType;
                           lharmonic::Int64=2,n1max::Int64=10,
                           MTOT::Float64=1.,N::Int64=10^4,
                           Kv::Int64=200,VMAPN::Int64=2,

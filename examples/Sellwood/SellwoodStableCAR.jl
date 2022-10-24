@@ -104,7 +104,7 @@ const n1max = 1  # maximum number of radial resonances to consider
 const nradial = basis.nmax
 const KuTruncation=10000
 const VERBOSE = 1
-const OVERWRITE = true
+const OVERWRITE = false
 
 ####
 const EDGE = 0.01

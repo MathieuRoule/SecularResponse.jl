@@ -4,7 +4,7 @@ struct BalescuLenardCoupling
 
     name::String 
 
-    basis::AB.Basis_type
+    basis::AB.BasisType
     nradial::Int64
 
     UFT::Array{Float64}
@@ -19,7 +19,7 @@ struct BalescuLenardCoupling
 
 end
 
-function BalescuLenardCouplingCreate(basis::AB.Basis_type,fht::FHT.FHTtype,params::CAR.ResponseParameters;name::String="BalescuLenard")
+function BalescuLenardCouplingCreate(basis::AB.BasisType,fht::FHT.FHTtype,params::CAR.ResponseParameters;name::String="BalescuLenard")
 
     nradial = basis.nmax
 

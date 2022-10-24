@@ -5,13 +5,13 @@ struct LandauBasisCoupling
 
     name::String 
 
-    basis::AB.Basis_type
+    basis::AB.BasisType
     
     UFT::Array{Float64}
     UFTp::Array{Float64}
 end
 
-function LandauBasisCouplingCreate(basis::AB.Basis_type;name::String="LandauBasis")
+function LandauBasisCouplingCreate(basis::AB.BasisType;name::String="LandauBasis")
 
     return LandauBasisCoupling(name,basis,
                                zeros(Float64,basis.nmax),zeros(Float64,basis.nmax))
