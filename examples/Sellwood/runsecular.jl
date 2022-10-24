@@ -5,6 +5,8 @@ all steps combined into one: could pause and restart if this was too much.
 
 """
 
+using HDF5
+
 inputfile = "SellwoodStable.jl"
 include(inputfile)
 
@@ -25,15 +27,15 @@ CallAResponse.MakeaMCoefficients(FHT,params)
 # Secular response
 #####
 
+const coupling = SecularResponse.BalescuLenardCouplingCreate(basis,FHT,params)
+# const coupling = SecularResponse.LandauBasisCouplingCreate(basis)
+
 Amin, Amax, nA = 0.3, 2.0, 100
 Emin, Emax, nE = 0.0, 0.7, 101
 
 tabAE = SecularResponse.AEgrid(Amin,Amax,nA,Emin,Emax,nE)
 
-tabJL, totfric, totdiff, totflux = SecularResponse.GetSecular(tabAE,ψ,dψ,d2ψ,d3ψ,d4ψ,βc,DF,ndFdJ,coupling,SRparams)
-
-
-using HDF5
+tabJL, totfric, totdiff, totflux = SecularResponse.GetSecular(tabAE,ψ,dψ,d2ψ,d3ψ,d4ψ,βc,DF,ndFdJ,coupling,SRparams
 
 filename = "Jldomain.hf5"
 h5open(filename,"w") do file
