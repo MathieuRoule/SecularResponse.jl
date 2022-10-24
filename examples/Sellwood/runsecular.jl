@@ -35,7 +35,7 @@ Emin, Emax, nE = 0.0, 0.7, 101
 
 tabAE = SecularResponse.AEgrid(Amin,Amax,nA,Emin,Emax,nE)
 
-tabJL, totfric, totdiff, totflux = SecularResponse.GetSecular(tabAE,ψ,dψ,d2ψ,d3ψ,d4ψ,βc,DF,ndFdJ,coupling,SRparams
+tabJL, totfric, totdiff, totflux = SecularResponse.GetSecular(tabAE,ψ,dψ,d2ψ,d3ψ,d4ψ,βc,DF,ndFdJ,coupling,SRparams)
 
 filename = "Jldomain.hf5"
 h5open(filename,"w") do file
