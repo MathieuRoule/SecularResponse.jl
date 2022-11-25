@@ -30,7 +30,7 @@ function BalescuLenardCouplingCreate(basis::AB.BasisType,fht::FHT.FHTtype,params
                                 fht,
                                 tabaMcoef,
                                 zeros(Complex{Float64},nradial,nradial),
-                                zeros(Complex{Float64},nradial,nradial),
+                                Matrix{Complex{Float64}}(I, nradial, nradial),
                                 zeros(Complex{Float64},nradial,nradial))
 end
 
@@ -39,7 +39,7 @@ function CCPrepare!(a::Float64,e::Float64,
                     k1::Int64,k2::Int64,
                     lharmonic::Int64,
                     ω::Complex{Float64},
-                    ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,
+                    ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,
                     coupling::BalescuLenardCoupling,
                     params::Parameters)
 
@@ -52,7 +52,7 @@ function CCPrepare!(a::Float64,e::Float64,
         ω = - conj(ω)
     end
     # Computing the basis FT (k,J)
-    CAR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFT,params.CARparams)
+    CAR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.basis,coupling.UFT,params.CARparams)
 
     # Computing the response matrix
     CAR.tabM!(ω,coupling.M,coupling.aMcoef,coupling.fht,params.CARparams)
@@ -84,7 +84,7 @@ function CouplingCoefficient(a::Float64,e::Float64,
                              k1p::Int64,k2p::Int64,
                              lharmonic::Int64,
                              ω::Complex{Float64},
-                             ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,
+                             ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,
                              coupling::BalescuLenardCoupling,
                              params::Parameters)
 
@@ -98,7 +98,7 @@ function CouplingCoefficient(a::Float64,e::Float64,
         k2p *= -1
     end
     # Computing the basis FT (k',J')
-    CAR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFTp,params.CARparams)
+    CAR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.basis,coupling.UFTp,params.CARparams)
 
     res = 0.
     for j = 1:params.CARparams.nradial

@@ -6,6 +6,7 @@ all steps combined into one: could pause and restart if this was too much.
 """
 
 using HDF5
+using BenchmarkTools
 
 inputfile = "SellwoodStable.jl"
 include(inputfile)
@@ -13,34 +14,36 @@ include(inputfile)
 #####
 # Linear Response
 #####
-# Construct W matrices (basis FT)
-CallAResponse.RunWmat(ψ,dψ,d2ψ,d3ψ,FHT,basis,params)
+# # Construct W matrices (basis FT)
+# CallAResponse.RunWmat(ψ,dψ,d2ψ,d3ψ,d4ψ,FHT,basis,params)
     
-# Compute G(u) functions
-CallAResponse.RunGfunc(ndFdJ,FHT,params)
+# # Compute G(u) functions
+# CallAResponse.RunGfunc(ndFdJ,FHT,params)
 
-# Compute matrix decomposition coefficient 
-CallAResponse.MakeaMCoefficients(FHT,params)
+# # Compute matrix decomposition coefficient 
+# CallAResponse.MakeaMCoefficients(FHT,params)
 
 
 #####
 # Secular response
 #####
 
-const coupling = SecularResponse.BalescuLenardCouplingCreate(basis,FHT,params)
-# const coupling = SecularResponse.LandauBasisCouplingCreate(basis)
+coupling = SecularResponse.BalescuLenardCouplingCreate(basis,FHT,params)
+# coupling = SecularResponse.LandauBasisCouplingCreate(basis)
 
-Amin, Amax, nA = 0.3, 2.0, 100
-Emin, Emax, nE = 0.0, 0.7, 101
+Jmin, Jmax, nJ = 0.1, 0.1, 5
+Lmin, Lmax, nL = 1.2, 1.2, 5
 
-tabAE = SecularResponse.AEgrid(Amin,Amax,nA,Emin,Emax,nE)
+tabJL = SecularResponse.Grid2D(Jmin,Jmax,nJ,Lmin,Lmax,nL)
 
-tabJL, totfric, totdiff, totflux = SecularResponse.GetSecular(tabAE,ψ,dψ,d2ψ,d3ψ,d4ψ,βc,DF,ndFdJ,coupling,SRparams)
+@time tabJLcomp, totfric, totdiff, totflux = SecularResponse.GetSecular(tabJL,ψ,dψ,d2ψ,d3ψ,d4ψ,βc,DF,ndFdJ,coupling,SRparams)
 
-filename = "Jldomain.hf5"
-h5open(filename,"w") do file
-    write(file,"tabJL",tabJL)
-    write(file,"totfric",totfric)
-    write(file,"totdiff",totdiff)
-    write(file,"totflux",totflux)
-end
+println(totflux[:,1])
+
+# filename = "Jldomain.hf5"
+# h5open(filename,"w") do file
+#     write(file,"tabJL",tabJL)
+#     write(file,"totfric",totfric)
+#     write(file,"totdiff",totdiff)
+#     write(file,"totflux",totflux)
+# end

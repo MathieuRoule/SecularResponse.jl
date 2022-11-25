@@ -3,7 +3,7 @@
 """
 function to make a table of (a, e) values
 """
-function AEgrid(Amin::Float64,Amax::Float64,nA::Int64,
+function Grid2D(Amin::Float64,Amax::Float64,nA::Int64,
                    Emin::Float64,Emax::Float64,nE::Int64)
 
     # compute the total number of (complex) frequencies to probe

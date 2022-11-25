@@ -16,7 +16,7 @@ function CCPrepare!(a::Float64,e::Float64,
                     k1::Int64,k2::Int64,
                     lharmonic::Int64,
                     ω::Float64,
-                    ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,
+                    ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,
                     coupling::LandauMultipoleCoupling,
                     params::Parameters)
 
@@ -30,7 +30,7 @@ function CouplingCoefficient(a::Float64,e::Float64,
                                 k1p::Int64,k2p::Int64,
                                 lharmonic::Int64,
                                 ω::Float64,
-                                ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,
+                                ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,
                                 coupling::LandauMultipoleCoupling,
                                 params::Parameters)
 

@@ -51,7 +51,6 @@ const d2ψ(r::Float64) = OrbitalElements.d2ψMestel(r,R0,V0)
 const d3ψ(r::Float64) = OrbitalElements.d3ψMestel(r,R0,V0)
 const d4ψ(r::Float64) = OrbitalElements.d4ψMestel(r,R0,V0)
 const Ω₀ = OrbitalElements.Ω₀Mestel(R0,V0)
-println("Ω₀ = ",Ω₀)
 
 ##############################
 # Outputs directories
@@ -75,20 +74,19 @@ const dfname = "Sellwood_q_"*string(q0)*"_xi_"*string(xi)*"_mu_"*string(mu)*"_nu
 
 const ndFdJ(n1::Int64,n2::Int64,
         E::Float64,L::Float64,
-        ndotOmega::Float64)   = OrbitalElements.mestel_Zang_ndDFdJ(n1,n2,E,L,ndotOmega;
-                                                        R0=R0,Rin=Rin,Rmax=Rmax,
-                                                        V0=V0,
-                                                        xi=xi,C=C0,
-                                                        q=q0,sigma=σ0,
-                                                        nu=nu,mu=mu)
-
+        ndotOmega::Float64)   = OrbitalElements.mestel_Zang_ndDFdJ(n1,n2,E,L,ndotOmega,R0,Rin,Rout,Rmax,V0,xi,C0,q0,σ0,nu,mu)
 
 #####
 # Parameters
 #####
+# OrbitalElements parameters
+const EDGE = 0.01
+const TOLECC = 0.001
 # Radii for frequency truncations
 const rmin = 0.1
 const rmax = 1.e4
+
+const OEparams = OrbitalElements.OrbitsParametersCreate(dψ,d2ψ,Ω₀;rmin=rmin,rmax=rmax,EDGE=EDGE,TOLECC=TOLECC)
 
 const Ku = 200           # number of u integration sample points
 const FHT = FiniteHilbertTransform.LegendreFHTcreate(Ku)
@@ -106,18 +104,13 @@ const KuTruncation=10000
 const VERBOSE = 1
 const OVERWRITE = false
 
-####
-const EDGE = 0.01
-const ELTOLECC = 0.001
-
 const ADAPTIVEKW = false
 
-params = CallAResponse.ResponseParametersCreate(dψ,d2ψ,Ku=Ku,Kv=Kv,Kw=Kw,
+params = CallAResponse.ResponseParametersCreate(;Ku=Ku,Kv=Kv,Kw=Kw,
                                                 modelname=modelname,dfname=dfname,
                                                 wmatdir=wmatdir,gfuncdir=gfuncdir,modedir=modedir,
                                                 lharmonic=lharmonic,n1max=n1max,nradial=nradial,
                                                 KuTruncation=KuTruncation,
                                                 VERBOSE=VERBOSE,OVERWRITE=OVERWRITE,
-                                                Ω₀=Ω₀,rmin=rmin,rmax=rmax,
-                                                EDGE=EDGE,ELTOLECC=ELTOLECC,ndim=basis.dimension,
+                                                OEparams=OEparams,ndim=basis.dimension,
                                                 nmax=basis.nmax,rbasis=basis.rb,ADAPTIVEKW=ADAPTIVEKW)
