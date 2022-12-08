@@ -15,7 +15,7 @@ struct BalescuLenardCoupling
     aMcoef::Array{Float64,4}
     M::Matrix{Complex{Float64}}
     IMat::Matrix{Complex{Float64}}
-    Xi::Matrix{Complex{Float64}}
+    UFTXi::Array{Complex{Float64}}
 
 end
 
@@ -31,7 +31,7 @@ function BalescuLenardCouplingCreate(basis::AB.BasisType,fht::FHT.FHTtype,params
                                 tabaMcoef,
                                 zeros(Complex{Float64},nradial,nradial),
                                 Matrix{Complex{Float64}}(I, nradial, nradial),
-                                zeros(Complex{Float64},nradial,nradial))
+                                zeros(Complex{Float64},nradial))
 end
 
 function CCPrepare!(a::Float64,e::Float64,
@@ -52,7 +52,12 @@ function CCPrepare!(a::Float64,e::Float64,
         ω = - conj(ω)
     end
     # Computing the basis FT (k,J)
-    CAR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.basis,coupling.UFT,params.CARparams)
+    try
+        CAR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.basis,coupling.UFT,params.CARparams)
+    catch e
+        println("Basis FT error for a = ",a," ; e = ",e," ; Ω1 = ",Ω1," ; Ω2 = ",Ω2," ; k1 = ",k1," ; k2 = ",k2)
+    end
+
 
     # Computing the response matrix
     CAR.tabM!(ω,coupling.M,coupling.aMcoef,coupling.fht,params.CARparams)
@@ -68,9 +73,10 @@ function CCPrepare!(a::Float64,e::Float64,
 
     tabXi = inv(Symmetric(coupling.IMat - coupling.M)) # @ TO IMPROVE -- in place
 
+    fill!(coupling.UFTXi,0.0+im*0.0)
     for j = 1:params.CARparams.nradial
         for i = 1:params.CARparams.nradial
-            coupling.Xi[i,j] = tabXi[i,j]
+            coupling.UFTXi[j] += coupling.UFT[i] * tabXi[i,j]
         end
     end
 end
@@ -86,7 +92,7 @@ function CouplingCoefficient(a::Float64,e::Float64,
                              ω::Complex{Float64},
                              ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,
                              coupling::BalescuLenardCoupling,
-                             params::Parameters)
+                             params::Parameters)::ComplexF64
 
     """
     @ASSUMING the (k,J) part has been prepared
@@ -98,13 +104,15 @@ function CouplingCoefficient(a::Float64,e::Float64,
         k2p *= -1
     end
     # Computing the basis FT (k',J')
-    CAR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.basis,coupling.UFTp,params.CARparams)
+    try
+        CAR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.basis,coupling.UFTp,params.CARparams)
+    catch e
+        println("Basis FT error for ap = ",ap," ; ep = ",ep," ; Ω1p = ",Ω1p," ; Ω2p = ",Ω2p," ; k1p = ",k1p," ; k2p = ",k2p)
+    end
 
-    res = 0.
-    for j = 1:params.CARparams.nradial
-        for i = 1:params.CARparams.nradial
-            res -= coupling.UFT[i] * coupling.Xi[i,j] * coupling.UFTp[j]
-        end
+    res = 0.0 + im*0.0
+    for i = 1:params.CARparams.nradial
+        res -= coupling.UFTXi[i] * coupling.UFTp[i]
     end
     return res
 end
