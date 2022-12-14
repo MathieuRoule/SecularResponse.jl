@@ -25,13 +25,13 @@ using HDF5
 ##############################
 # Basis
 ##############################
-G  = 1.
+const G  = 1.
 
 # Clutton-Brock (1972) basis
-basisname = "CluttonBrock"
-rb = 5.
-lmax,nmax = 2,10 # Usually lmax corresponds to the considered harmonics lharmonic
-basis = AstroBasis.CB72BasisCreate(lmax=lmax,nmax=nmax,G=G,rb=rb) 
+const basisname = "CluttonBrock"
+const rb = 5.
+const lmax,nmax = 2,10 # Usually lmax corresponds to the considered harmonics lharmonic
+const basis = AstroBasis.CB72BasisCreate(lmax=lmax,nmax=nmax,G=G,rb=rb) 
 
 # # Kalnajs (1976) basis
 # basisname = "Kalnajs"
@@ -106,7 +106,7 @@ const OVERWRITE = false
 
 const ADAPTIVEKW = false
 
-params = CallAResponse.ResponseParametersCreate(;Ku=Ku,Kv=Kv,Kw=Kw,
+const CARparams = CallAResponse.ResponseParametersCreate(;Ku=Ku,Kv=Kv,Kw=Kw,
                                                 modelname=modelname,dfname=dfname,
                                                 wmatdir=wmatdir,gfuncdir=gfuncdir,modedir=modedir,
                                                 lharmonic=lharmonic,n1max=n1max,nradial=nradial,

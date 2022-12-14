@@ -7,8 +7,8 @@ struct LandauBasisCoupling
 
     basis::AB.BasisType
     
-    UFT::Array{Float64}
-    UFTp::Array{Float64}
+    UFT::Vector{Float64}
+    UFTp::Vector{Float64}
 end
 
 function LandauBasisCouplingCreate(basis::AB.BasisType;name::String="LandauBasis")
@@ -34,7 +34,7 @@ function CCPrepare!(a::Float64,e::Float64,
         k2 *= -1
     end
     # Computing the basis FT (k,J) 
-    CAR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.basis,coupling.UFT,params.CARparams)
+    CAR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFT,params.CARparams)
 end
 
 """
@@ -52,7 +52,7 @@ function CouplingCoefficient(a::Float64,e::Float64,
                              ω::Complex{Float64},
                              ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,
                              coupling::LandauBasisCoupling,
-                             params::Parameters)
+                             params::Parameters)::Float64
     """
     @ASSUMING the (k,J) part has been prepared
     """
@@ -64,13 +64,11 @@ function CouplingCoefficient(a::Float64,e::Float64,
         k2 *= -1
     end
     # Computing the basis FT (k',J')
-    CAR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.basis,coupling.UFTp,params.CARparams)
+    CAR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFTp,params.CARparams)
 
-    res = 0.
-    for i = 1:params.CARparams.nradial
-        for j = 1:params.CARparams.nradial
-            res -= coupling.UFT[i] * coupling.UFTp[j]
-        end
+    res = 0.0
+    for j = 1:params.CARparams.nradial
+        res -= coupling.UFT[j] * coupling.UFTp[j]
     end
     return res
 end

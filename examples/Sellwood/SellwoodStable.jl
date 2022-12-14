@@ -4,7 +4,7 @@ include("./SellwoodStableCAR.jl")
 
 import SecularResponse
 
-SRparams = SecularResponse.ParametersCreate(params,basis,n1max=1,VERBOSE=0)
+const SRparams = SecularResponse.ParametersCreate(CARparams,basis,n1max=1,VERBOSE=0)
 
 const βc(αc::Float64) = OrbitalElements.βcirc(αc,dψ,d2ψ,OEparams)
 

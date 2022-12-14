@@ -152,10 +152,10 @@ function GetSecularResContrib(a::Float64,e::Float64,
 
         # get the current v value
         vp   = δvp*(kvval-0.5)
-        vval = CAR.vprime(vp,vmin,vmax,n=params.VMAPN)
+        vval = CAR.vprime(vp,vmin,vmax,params.VMAPN)
 
         # vp -> v
-        Jacvp = CAR.dvprime(vp,vmin,vmax,n=params.VMAPN)
+        Jacvp = CAR.dvprime(vp,vmin,vmax,params.VMAPN)
 
         ####
         # (ures,v') -> (a',e')
@@ -186,7 +186,7 @@ function GetSecularResContrib(a::Float64,e::Float64,
         JacJ = (1/Ω1p)
 
         # Coupling coefficient
-       SQpsid = (abs(CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ωres,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling,params)))^(2)
+        SQpsid = (abs(CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ωres,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling,params)))^(2)
 
         commonpart = Jacvp * JacJ * JacEL * Jacαβ * SQpsid
 
@@ -220,20 +220,17 @@ end
 """
     GetSecular(J,lharmonic)
 
-Secular evolution (Flux, Friction, Diffusion) at given actions (J_r,L)
+Secular evolution (Friction, Diffusion, Flux) at given actions (Jr,L)
 on the harmonic l (decoupled harmonic numbers).
 
 @ATTENTION: We take into account both contribution from lharmonic and -lharmonic
 """
-function GetSecular(a::Float64,e::Float64,
+function GetSecular(J::Float64,L::Float64,
                      ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,βc::Function,
                      DF::Function,ndFdJ::Function,
                      coupling::CouplingType,
                      params::Parameters)
 
-    """
-    @IMPROVE: Make it a function of Jr,L (i.e. make a (Jr,L) -> (a,e) mapping
-    """
 
     (params.VERBOSE > 0) && println("SecularResponse.GetSecular: Considering $(params.nbResPair) resonances pairs.")
 
@@ -242,10 +239,14 @@ function GetSecular(a::Float64,e::Float64,
     totdiff = zeros(Float64,2,2)
     totflux = zeros(Float64,2)
 
-    # Considered a, e : associated frequencies/actions
     OEparams = params.CARparams.OEparams
-    Ω1, Ω2, J = OE.ComputeFrequenciesJAE(ψ,dψ,d2ψ,d3ψ,d4ψ,a,e,OEparams)
-    L = OE.LFromAE(ψ,dψ,d2ψ,d3ψ,a,e,OEparams)
+
+    # Considered a, e : associated frequencies/actions
+    a, e = OE.ComputeAEFromActions(ψ,dψ,d2ψ,d3ψ,J,L,OEparams)
+    if (a <= 0.) || (e < 0.) || (e > 1.)
+        error("Wrong domain ! For J = ",J," ; L = ",L," ; invertion gives a = ",a," ; e = ",e," ")
+    end
+    Ω1, Ω2 = OE.ComputeFrequenciesAE(ψ,dψ,d2ψ,d3ψ,d4ψ,a,e,OEparams)
 
     for ires = 1:params.nbResPair
 
@@ -301,7 +302,7 @@ function GetSecular(a::Float64,e::Float64,
     totflux[1] *= prefflux
     totflux[2] *= prefflux
 
-    return J, L, totfric, totdiff, totflux
+    return a, e, totfric, totdiff, totflux
 end
 
 """
@@ -320,7 +321,6 @@ function GetSecular(tabJL::Matrix{Float64},
 
     # Corresponding actions/frequencies
     tabAE = zeros(Float64,2,npts)
-    tabJLcomp = zeros(Float64,2,npts)
 
     # Initialising the contribution
     totfric = zeros(Float64,2,npts)
@@ -331,18 +331,14 @@ function GetSecular(tabJL::Matrix{Float64},
 
     Threads.@threads for k = 1:npts
 
-        t = Threads.threadid()
-
         J, L = tabJL[1,k], tabJL[2,k]
-        a, e = OE.ComputeAEFromActions(ψ,dψ,d2ψ,d3ψ,d4ψ,J,L,params.CARparams.OEparams)
 
-        Jcomp, Lcomp, fric, diff, flux = GetSecular(a,e,ψ,dψ,d2ψ,d3ψ,d4ψ,βc,DF,ndFdJ,couplings[t],params)
+        t = Threads.threadid()
+        a, e, fric, diff, flux = GetSecular(J,L,ψ,dψ,d2ψ,d3ψ,d4ψ,βc,DF,ndFdJ,couplings[t],params)
 
         # Orbit
         tabAE[1,k] = a
         tabAE[2,k] = e
-        tabJLcomp[1,k] = Jcomp
-        tabJLcomp[2,k] = Lcomp
 
         # Evolution
         totfric[1,k] = fric[1]
@@ -355,8 +351,9 @@ function GetSecular(tabJL::Matrix{Float64},
         totflux[2,k] = flux[2]
     end
 
+    # print("\n")
     # show(to)
     # println("\n END")
 
-    return tabJLcomp, totfric, totdiff, totflux
+    return tabAE, totfric, totdiff, totflux
 end
