@@ -229,7 +229,7 @@ function GetSecular(tabJL::Matrix{Float64},
     # β circular curve
     βc(αc::Float64) = OE.βcirc(αc,dψ,d2ψ,params.CARparams.OEparams)
 
-    #p = Progress(npts)
+    p = Progress(npts,desc="Secular computations: ")
 
     Threads.@threads for k = 1:npts
 
@@ -252,7 +252,7 @@ function GetSecular(tabJL::Matrix{Float64},
         totflux[1,k] = flux[1]
         totflux[2,k] = flux[2]
 
-        #next!(p)
+        next!(p)
     end
 
     outputfilename = SecularFilename(params)
