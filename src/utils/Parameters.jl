@@ -18,6 +18,8 @@ struct Parameters
     Kv::Int64
     VMAPN::Int64
 
+    secdir::String
+
     VERBOSE::Int64
 end
 
@@ -26,6 +28,7 @@ function ParametersCreate(CARparams::CAR.ResponseParameters,
                           lharmonic::Int64=2,n1max::Int64=10,
                           MTOT::Float64=1.,N::Int64=10^4,
                           Kv::Int64=200,VMAPN::Int64=2,
+                          secdir::String="",
                           VERBOSE::Int64=0)
 
     # Resonance vectors
@@ -35,5 +38,5 @@ function ParametersCreate(CARparams::CAR.ResponseParameters,
 
     return Parameters(CARparams,
                       lharmonic,n1max,basis.dimension,
-                      MTOT,N,nbResPair,tabResPair,Kv,VMAPN,VERBOSE)
+                      MTOT,N,nbResPair,tabResPair,Kv,VMAPN,secdir,VERBOSE)
 end

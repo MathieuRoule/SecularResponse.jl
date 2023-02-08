@@ -1,5 +1,8 @@
 .DS_Store
 **/.DS_Store
 
+.vscode/*
+**/.vscode/*
+
 examples/**/*.hf5
 examples/**/*.h5

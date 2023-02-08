@@ -34,14 +34,14 @@ function BalescuLenardCouplingCreate(basis::AB.BasisType,fht::FHT.FHTtype,params
                                 zeros(Complex{Float64},nradial))
 end
 
-@inline function CCPrepare!(a::Float64,e::Float64,
+function CCPrepare!(a::Float64,e::Float64,
                     Ω1::Float64,Ω2::Float64,
                     k1::Int64,k2::Int64,
                     lharmonic::Int64,
                     ω::Complex{Float64},
-                    ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,
+                    ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,d4ψ::F4,
                     coupling::BalescuLenardCoupling,
-                    params::Parameters)
+                    params::Parameters) where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
 
     if lharmonic < 0 
         @assert (params.CARparams.lharmonic == -lharmonic) "Unexpected lharmonic"
@@ -85,9 +85,9 @@ end
                              k1p::Int64,k2p::Int64,
                              lharmonic::Int64,
                              ω::Complex{Float64},
-                             ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,
+                             ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,d4ψ::F4,
                              coupling::BalescuLenardCoupling,
-                             params::Parameters)::ComplexF64
+                             params::Parameters)::ComplexF64 where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
 
     """
     @ASSUMING the (k,J) part has been prepared
