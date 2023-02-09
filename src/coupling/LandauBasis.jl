@@ -25,16 +25,16 @@ function CCPrepare!(a::Float64,e::Float64,
                     ω::Complex{Float64},
                     ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,d4ψ::F4,
                     coupling::LandauBasisCoupling,
-                    params::Parameters) where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
+                    CARparams::CAR.ResponseParameters) where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
 
     if lharmonic < 0 
-        @assert (params.CARparams.lharmonic == -lharmonic) "Unexpected lharmonic"
+        @assert (CARparams.lharmonic == -lharmonic) "Unexpected lharmonic"
         # ψ^{n,-l}_k = ψ^{n,l}_{-k}
         k1 *= -1
         k2 *= -1
     end
     # Computing the basis FT (k,J) 
-    CAR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFT,params.CARparams)
+    CAR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFT,CARparams)
 end
 
 """
@@ -52,19 +52,19 @@ function CouplingCoefficient(a::Float64,e::Float64,
                              ω::Complex{Float64},
                              ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,d4ψ::F4,
                              coupling::LandauBasisCoupling,
-                             params::Parameters)::Float64 where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
+                             CARparams::CAR.ResponseParameters)::Float64 where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
     """
     @ASSUMING the (k,J) part has been prepared
     """
 
     if lharmonic < 0 
-        @assert (params.CARparams.lharmonic == -lharmonic) "Unexpected lharmonic"
+        @assert (CARparams.lharmonic == -lharmonic) "Unexpected lharmonic"
         # ψ^{n,-l}_k = ψ^{n,l}_{-k}
         k1 *= -1
         k2 *= -1
     end
     # Computing the basis FT (k',J')
-    CAR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFTp,params.CARparams)
+    CAR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFTp,CARparams)
 
     res = 0.0
     for j = 1:params.CARparams.nradial

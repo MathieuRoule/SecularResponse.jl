@@ -13,7 +13,8 @@ function GetSecularResContrib(a::Float64,e::Float64,
                               coupling::CouplingType,
                               params::Parameters)  where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function, F5 <: Function, F6 <: Function, F7 <: Function}
 
-    OEparams = params.CARparams.OEparams
+    CARparams = params.CARparams
+    OEparams = CARparams.OEparams
     Ω₀ = OEparams.Ω₀
 
     # Frequency
@@ -35,7 +36,7 @@ function GetSecularResContrib(a::Float64,e::Float64,
     valkdFdJ = ndFdJ(k1,k2,Eval,Lval,kdotΩ)
 
     # Prepare the stable part of the coupling coefficients (not changing with J')
-    CCPrepare!(a,e,Ω1,Ω2,k1,k2,lharmonic,ωres,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling,params)
+    CCPrepare!(a,e,Ω1,Ω2,k1,k2,lharmonic,ωres,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling,CARparams)
 
     # Initialising the contribution
     fric, diff, flux = 0.0, 0.0, 0.0
@@ -85,7 +86,7 @@ function GetSecularResContrib(a::Float64,e::Float64,
         JacJ = (1/Ω1p)
 
         # Coupling coefficient
-        SQpsid = (abs(CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ωres,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling,params)))^(2)
+        SQpsid = (abs(CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ωres,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling,CARparams)))^(2)
 
         commonpart = Jacvp * JacJ * JacEL * Jacαβ * SQpsid
 
