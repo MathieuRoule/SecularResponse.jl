@@ -45,16 +45,16 @@ function GetSecularResContrib(a::Float64,e::Float64,
     vmin, vmax = OE.FindVminVmax(ures,k1p,k2p,dψ,d2ψ,ωminp,ωmaxp,βc,OEparams)
 
     # Integration step
-    δvp = 1.0/params.Kv
+    δv2 = 1.0/params.Kv
 
     for kvval in 1:params.Kv
 
         # get the current v value
-        vp   = δvp*(kvval-0.5)
-        vval = CAR.vFromvp(vp,vmin,vmax,params.VMAPN)
+        v2   = δv2*(kvval-0.5)
+        vval = CAR.vFromvp(v2,vmin,vmax,params.VMAPN)
 
-        # vp -> v
-        Jacvp = CAR.DvDvp(vp,vmin,vmax,params.VMAPN)
+        # dv'/ dv2
+        Jacvp = CAR.DvDvp(v2,vmin,vmax,params.VMAPN)
 
         ####
         # (ures,v') -> (a',e')
@@ -74,15 +74,13 @@ function GetSecularResContrib(a::Float64,e::Float64,
 
 
         # compute Jacobians
-        # (α,β) -> (u,v).
-        # owing to the remapping of Ω, this has an extra 2/(ωmax-ωmin)
+        # (2/(ωmax-ωmin)) * ∂(α,β)/ ∂(u,v)
         Jacαβ = OE.JacαβToUV(k1p,k2p,vval)
 
-        #(E,L) -> (α,β): this is the most expensive function here,
-        # so we have pre-tabulated it
+        # ∂(E,L)/ ∂(α,β) 
         JacEL = OE.JacELToαβAE(ψ,dψ,d2ψ,d3ψ,d4ψ,ap,ep,OEparams)
 
-        #(J) -> (E,L)
+        # ∂(Jr,L)/ ∂(E,L)
         JacJ = (1/Ω1p)
 
         # Coupling coefficient
@@ -97,7 +95,7 @@ function GetSecularResContrib(a::Float64,e::Float64,
     end
 
     # remove dimensionality from Ω mapping
-    dimensionl = δvp/Ω₀
+    dimensionl = δv2/Ω₀
     fric *= dimensionl
     diff *= dimensionl
     flux *= dimensionl

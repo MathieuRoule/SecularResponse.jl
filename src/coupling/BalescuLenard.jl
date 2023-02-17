@@ -13,9 +13,10 @@ struct BalescuLenardCoupling
     fht::FHT.FHTtype
 
     aMcoef::Array{Float64,4}
-    M::Matrix{Complex{Float64}}
-    IMat::Matrix{Complex{Float64}}
-    UFTXi::Vector{Complex{Float64}}
+    tabωminωmax::Matrix{Float64}
+    M::Matrix{ComplexF64}
+    IMat::Matrix{ComplexF64}
+    UFTXi::Vector{ComplexF64}
 
 end
 
@@ -23,22 +24,22 @@ function BalescuLenardCouplingCreate(basis::AB.BasisType,fht::FHT.FHTtype,params
 
     nradial = basis.nmax
 
-    tabaMcoef = CAR.StageaMcoef(params)
+    tabaMcoef, tabωminωmax = CAR.StageAXi(params)
 
     return BalescuLenardCoupling(name,basis,nradial,
                                 zeros(Float64,nradial),zeros(Float64,nradial),
                                 fht,
-                                tabaMcoef,
-                                zeros(Complex{Float64},nradial,nradial),
-                                Matrix{Complex{Float64}}(I, nradial, nradial),
-                                zeros(Complex{Float64},nradial))
+                                tabaMcoef,tabωminωmax,
+                                zeros(ComplexF64,nradial,nradial),
+                                Matrix{ComplexF64}(I, nradial, nradial),
+                                zeros(ComplexF64,nradial))
 end
 
 function CCPrepare!(a::Float64,e::Float64,
                     Ω1::Float64,Ω2::Float64,
                     k1::Int64,k2::Int64,
                     lharmonic::Int64,
-                    ω::Complex{Float64},
+                    ω::ComplexF64,
                     ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,d4ψ::F4,
                     coupling::BalescuLenardCoupling,
                     CARparams::CAR.ResponseParameters) where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
@@ -55,7 +56,7 @@ function CCPrepare!(a::Float64,e::Float64,
     CAR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFT,CARparams)
 
     # Computing the response matrix
-    CAR.tabM!(ω,coupling.M,coupling.aMcoef,coupling.fht,CARparams)
+    CAR.tabM!(ω,coupling.M,coupling.aMcoef,coupling.tabωminωmax,coupling.fht,CARparams)
 
     if lharmonic < 0 
         # M^{-l}(ω) = (M^{l}(-ω*))*
@@ -84,7 +85,7 @@ function CouplingCoefficient(a::Float64,e::Float64,
                              k1::Int64,k2::Int64,
                              k1p::Int64,k2p::Int64,
                              lharmonic::Int64,
-                             ω::Complex{Float64},
+                             ω::ComplexF64,
                              ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,d4ψ::F4,
                              coupling::BalescuLenardCoupling,
                              CARparams::CAR.ResponseParameters)::ComplexF64 where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
