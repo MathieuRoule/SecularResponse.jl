@@ -67,7 +67,7 @@ function CouplingCoefficient(a::Float64,e::Float64,
     CAR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFTp,CARparams)
 
     res = 0.0
-    for j = 1:params.CARparams.nradial
+    for j = 1:CARparams.nradial
         res -= coupling.UFT[j] * coupling.UFTp[j]
     end
     return res

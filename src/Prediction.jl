@@ -254,7 +254,7 @@ function GetSecular(tabJL::Matrix{Float64},
         next!(p)
     end
 
-    outputfilename = SecularFilename(params)
+    outputfilename = SecularFilename(params,coupling.name)
     h5open(outputfilename, "w") do file
         # Basis results
         write(file,"tabJL",tabJL)

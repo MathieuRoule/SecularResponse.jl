@@ -27,10 +27,10 @@ end
     SecularFilename()
 
 """
-function SecularFilename(params::Parameters)
+function SecularFilename(params::Parameters,couplingname::String)
 
     CARparams = params.CARparams
-    return params.secdir*"Secular_"*CARparams.modelname*"_df_"*CARparams.dfname*"_l_"*string(params.lharmonic)*"_n1_"*string(params.n1max)*"_rb_"*string(CARparams.rbasis)*"_Kv_"*string(params.Kv)*".h5"
+    return params.secdir*couplingname*"_"*CARparams.modelname*"_df_"*CARparams.dfname*"_l_"*string(params.lharmonic)*"_n1_"*string(params.n1max)*"_rb_"*string(CARparams.rbasis)*"_Kv_"*string(params.Kv)*".h5"
 end
 
 """
