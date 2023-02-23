@@ -25,7 +25,7 @@ function GetSecularResContrib(a::Float64,e::Float64,
     # k' related values
     ωminp, ωmaxp = OE.Findωminωmax(k1p,k2p,dψ,d2ψ,OEparams)
     # Resonance u
-    ures = real(OE.Getϖ(ωres,ωminp,ωmaxp))
+    ures = real(OE.Getϖ(ωres/Ω₀,ωminp,ωmaxp))
 
     # If no possible resonance (k,k')
     ( -1. < ures < 1.) || (return 0., 0., 0.)
