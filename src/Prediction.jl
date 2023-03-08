@@ -24,11 +24,11 @@ function GetSecularResContrib(a::Float64,e::Float64,
     
     # k' related values
     ωminp, ωmaxp = OE.Findωminωmax(k1p,k2p,dψ,d2ψ,OEparams)
-    # Resonance u
-    ures = real(OE.Getϖ(ωres/Ω₀,ωminp,ωmaxp))
+    # Resonance u'
+    upres = real(OE.Getϖ(ωres/Ω₀,ωminp,ωmaxp))
 
     # If no possible resonance (k,k')
-    ( -1. < ures < 1.) || (return 0., 0., 0.)
+    ( -1. < upres < 1.) || (return 0., 0., 0.)
 
     # Functions value in J
     Eval, Lval = OE.ELFromAE(ψ,dψ,d2ψ,d3ψ,a,e,OEparams)
@@ -42,7 +42,7 @@ function GetSecularResContrib(a::Float64,e::Float64,
     fric, diff, flux = 0.0, 0.0, 0.0
 
     # Integration interval (along the resonance line)
-    vmin, vmax = OE.FindVminVmax(ures,k1p,k2p,dψ,d2ψ,ωminp,ωmaxp,βc,OEparams)
+    vpmin, vpmax = OE.FindVminVmax(upres,k1p,k2p,dψ,d2ψ,ωminp,ωmaxp,βc,OEparams)
 
     # Integration step
     δv2 = 1.0/params.Kv
@@ -51,16 +51,13 @@ function GetSecularResContrib(a::Float64,e::Float64,
 
         # get the current v value
         v2   = δv2*(kvval-0.5)
-        vval = CAR.vFromvp(v2,vmin,vmax,params.VMAPN)
-
-        # dv'/ dv2
-        Jacvp = CAR.DvDvp(v2,vmin,vmax,params.VMAPN)
+        vpval = CAR.vFromvp(v2,vmin,vmax,params.VMAPN)
 
         ####
-        # (ures,v') -> (a',e')
+        # (ures',v') -> (a',e')
         ####
         # (u',v') -> (α',β')
-        αp, βp = OE.αβFromUV(ures,vval,k1p,k2p,ωminp,ωmaxp)
+        αp, βp = OE.αβFromUV(upres,vpval,k1p,k2p,ωminp,ωmaxp)
         # (α',β') -> (Ω1',Ω2')
         Ω1p, Ω2p = OE.FrequenciesFromαβ(αp,βp,Ω₀)
         kdotΩp = k1p*Ω1p + k2p*Ω2p
@@ -72,21 +69,27 @@ function GetSecularResContrib(a::Float64,e::Float64,
         valFp = DF(Evalp,Lvalp)
         valkdFdJp = ndFdJ(k1p,k2p,Evalp,Lvalp,kdotΩp)
 
-
+        #####
         # compute Jacobians
-        # (2/(ωmax-ωmin)) * ∂(α,β)/ ∂(u,v)
-        Jacαβ = OE.JacαβToUV(k1p,k2p,vval)
+        #####
 
-        # ∂(E,L)/ ∂(α,β) 
-        JacEL = OE.JacELToαβAE(ψ,dψ,d2ψ,d3ψ,d4ψ,ap,ep,OEparams)
+        # (u,v2) -> (u,v') : dv'/ dv2
+        Jacv2 = CAR.DvDvp(v2,vmin,vmax,params.VMAPN)
 
-        # ∂(Jr,L)/ ∂(E,L)
+        # (u',v') -> (α',β').
+        # Renormalized. (2/(ωmax-ωmin) * |∂(α',β')/∂(u',v')|)
+        RenormalizedJacαβ = OrbitalElements.RenormalizedJacUVToαβ(n1,n2,upres,vpval)
+
+        # (α',β') -> (E',L') : |∂(E',L')/ ∂(α',β')| 
+        JacEL = OE.JacαβToELAE(ψ,dψ,d2ψ,d3ψ,d4ψ,ap,ep,OEparams)
+
+        # (E',L') -> (Jr',L') : |∂(Jr,L)/ ∂(E,L)|
         JacJ = (1/Ω1p)
 
         # Coupling coefficient
         SQpsid = (abs(CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ωres,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling,CARparams)))^(2)
 
-        commonpart = Jacvp * JacJ * JacEL * Jacαβ * SQpsid
+        commonpart = Jacv2 * JacJ * JacEL * RenormalizedJacαβ * SQpsid
 
         fric += commonpart * valkdFdJp
         diff += commonpart * valFp
