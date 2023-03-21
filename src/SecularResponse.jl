@@ -4,7 +4,7 @@ module SecularResponse
 import OrbitalElements as OE
 import AstroBasis as AB
 import FiniteHilbertTransform as FHT
-import CallAResponse as CAR
+import LinearResponse as LR
 using LinearAlgebra
 using HDF5
 using ProgressMeter

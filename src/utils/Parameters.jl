@@ -1,8 +1,8 @@
 
 
-struct Parameters
+struct SecularParameters
 
-    CARparams::CAR.ResponseParameters
+    Linearparams::LR.LinearParameters
 
     lharmonic::Int64
     n1max::Int64
@@ -18,25 +18,30 @@ struct Parameters
     Kv::Int64
     VMAPN::Int64
 
+    # Numerical derivative parameters (flux divergence)
+    dJ::Float64
+    dL::Float64
+
     secdir::String
 
     VERBOSE::Int64
 end
 
-function ParametersCreate(CARparams::CAR.ResponseParameters,
-                          basis::AB.BasisType;
+function SecularParameters(basis::AB.BasisType;
+                          Linearparams::LR.LinearParameters=LR.LinearParameters(),
                           n1max::Int64=10,
                           MTOT::Float64=1.,N::Int64=10^4,
                           Kv::Int64=200,VMAPN::Int64=2,
+                          dJ::Float64=1.e-3,dL::Float64=1.e-3,
                           secdir::String="",
                           VERBOSE::Int64=0)
 
     # Resonance vectors
-    nbResPair, tabResPair = MakeTabResPair(CARparams.lharmonic,n1max,basis.dimension)
+    nbResPair, tabResPair = MakeTabResPair(Linearparams.lharmonic,n1max,basis.dimension)
 
     # !!! CHECH COMPATIBILITY !!! TO ADD
 
-    return Parameters(CARparams,
-                      CARparams.lharmonic,n1max,basis.dimension,
-                      MTOT,N,nbResPair,tabResPair,Kv,VMAPN,secdir,VERBOSE)
+    return SecularParameters(Linearparams,
+                      Linearparams.lharmonic,n1max,basis.dimension,
+                      MTOT,N,nbResPair,tabResPair,Kv,VMAPN,dJ,dL,secdir,VERBOSE)
 end

@@ -27,17 +27,17 @@ end
     SecularFilename()
 
 """
-function SecularFilename(params::Parameters,couplingname::String)
+function SecularFilename(params::SecularParameters,couplingname::String)
 
-    CARparams = params.CARparams
-    return params.secdir*couplingname*"_"*CARparams.modelname*"_df_"*CARparams.dfname*"_l_"*string(params.lharmonic)*"_n1_"*string(params.n1max)*"_rb_"*string(CARparams.rbasis)*"_Kv_"*string(params.Kv)*".h5"
+    Linearparams = params.Linearparams
+    return params.secdir*couplingname*"_"*Linearparams.modelname*"_df_"*Linearparams.dfname*"_l_"*string(params.lharmonic)*"_n1_"*string(params.n1max)*"_rb_"*string(Linearparams.rbasis)*"_Kv_"*string(params.Kv)*".h5"
 end
 
 """
 write all the parameters to a file
 """
 function WriteParameters(filename::String,
-                         params::Parameters,
+                         params::SecularParameters,
                          mode::String="r+")
 
     h5open(filename, mode) do file
@@ -46,15 +46,15 @@ function WriteParameters(filename::String,
 end
 
 function WriteParameters(file::HDF5.File,
-                         params::Parameters)
+                         params::SecularParameters)
 
     group = create_group(file,"SecularParameters")
-    for i = 1:fieldcount(Parameters)
-        varname = string(fieldname(Parameters,i))
+    for i = 1:fieldcount(SecularParameters)
+        varname = string(fieldname(SecularParameters,i))
         if (varname == "tabResPair")
             continue
-        elseif (varname == "CARparams")
-            CAR.WriteParameters(file,params.CARparams)
+        elseif (varname == "Linearparams")
+            LR.WriteParameters(file,params.Linearparams)
         else
             try write(group,varname,getfield(params,i)) catch; println("Unable to write parameter: "*varname) end
         end

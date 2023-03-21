@@ -22,11 +22,11 @@ function CCPrepare!(a::Float64,e::Float64,
                     ω::ComplexF64,
                     ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,
                     coupling::BLPdSCoupling,
-                    CARparams::CAR.ResponseParameters)
+                    Linearparams::LR.LinearParameters)
 
-    CCPrepare!(a,e,Ω1,Ω2,k1,k2,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.LandauMultipole,CARparams)
-    CCPrepare!(a,e,Ω1,Ω2,k1,k2,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.LandauBasis,CARparams)
-    CCPrepare!(a,e,Ω1,Ω2,k1,k2,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.BalescuLenard,CARparams)
+    CCPrepare!(a,e,Ω1,Ω2,k1,k2,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.LandauMultipole,Linearparams)
+    CCPrepare!(a,e,Ω1,Ω2,k1,k2,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.LandauBasis,Linearparams)
+    CCPrepare!(a,e,Ω1,Ω2,k1,k2,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.BalescuLenard,Linearparams)
 end
 
 function CouplingCoefficient(a::Float64,e::Float64,
@@ -39,11 +39,11 @@ function CouplingCoefficient(a::Float64,e::Float64,
                              ω::ComplexF64,
                              ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,
                              coupling::BLPdSCoupling,
-                             CARparams::CAR.ResponseParameters)
+                             Linearparams::LR.LinearParameters)
 
-    psiMulti = CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.LandauMultipole,CARparams)
-    psiBasis = CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.LandauBasis,CARparams)
-    psidBL   = CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.BalescuLenard,CARparams)
+    psiMulti = CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.LandauMultipole,Linearparams)
+    psiBasis = CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.LandauBasis,Linearparams)
+    psidBL   = CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ω,ψ,dψ,d2ψ,d3ψ,d4ψ,coupling.BalescuLenard,Linearparams)
 
     return psidBL + (psiMulti - psiBasis) # "Pain de Sucre"
 end

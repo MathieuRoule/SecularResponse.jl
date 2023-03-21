@@ -18,7 +18,7 @@ function CCPrepare!(a::Float64,e::Float64,
                     ω::ComplexF64,
                     ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,
                     coupling::LandauMultipoleCoupling,
-                    CARparams::CAR.ResponseParameters)
+                    Linearparams::LR.LinearParameters)
 
 end
 
@@ -32,7 +32,7 @@ function CouplingCoefficient(a::Float64,e::Float64,
                                 ω::ComplexF64,
                                 ψ::Function,dψ::Function,d2ψ::Function,d3ψ::Function,d4ψ::Function,
                                 coupling::LandauMultipoleCoupling,
-                                CARparams::CAR.ResponseParameters)
+                                Linearparams::LR.LinearParameters)
 
     # TO DO !!!
     return 0.
