@@ -204,7 +204,7 @@ function GetSecular(J::Float64,L::Float64,
     end
 
     # Computing the flux divergence
-    dFdt = (totfluxdJ[1]-totflux[1])/params.dJ + (totfluxdL[2]-totflux[2])/params.dJ
+    dFdt = (totfluxdJ[1]-totflux[1])/params.dJ + (totfluxdL[2]-totflux[2])/params.dL
 
     # Adding overall prefactors
     preffric, prefdiff, prefflux, prefdFdt = SecularPrefactors(params.MTOT,params.N,params.dimension)
