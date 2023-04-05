@@ -20,20 +20,20 @@ struct BalescuLenardCoupling{BT<:AB.AbstractAstroBasis,HT<:FHT.AbstractFHT} <: A
 end
 
 function BalescuLenardCouplingCreate(basis::BT,fht::HT,
-                                    params::LR.LinearParameters;
-                                    name::String="BalescuLenard") where {BT<:AB.AbstractAstroBasis, HT<:FHT.AbstractFHT}
+                                     params::LR.LinearParameters;
+                                     name::String="BalescuLenard") where {BT<:AB.AbstractAstroBasis, HT<:FHT.AbstractFHT}
 
     
     nradial = params.nradial
     tabaMcoef, tabωminωmax = LR.StageAXi(params)
 
     return BalescuLenardCoupling(name,basis,
-                                zeros(Float64,nradial),zeros(Float64,nradial),
-                                fht,
-                                tabaMcoef,tabωminωmax,
-                                zeros(ComplexF64,nradial,nradial),
-                                Matrix{ComplexF64}(I, nradial, nradial),
-                                zeros(ComplexF64,nradial))
+                                 zeros(Float64,nradial),zeros(Float64,nradial),
+                                 fht,
+                                 tabaMcoef,tabωminωmax,
+                                 zeros(ComplexF64,nradial,nradial),
+                                 Matrix{ComplexF64}(I, nradial, nradial),
+                                 zeros(ComplexF64,nradial))
 end
 
 function CCPrepare!(a::Float64,e::Float64,
@@ -41,9 +41,9 @@ function CCPrepare!(a::Float64,e::Float64,
                     k1::Int64,k2::Int64,
                     lharmonic::Int64,
                     ω::ComplexF64,
-                    ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,
+                    ψ::F0,dψ::F1,d2ψ::F2,
                     coupling::BalescuLenardCoupling,
-                    Linearparams::LR.LinearParameters) where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function}
+                    Linearparams::LR.LinearParameters) where {F0 <: Function, F1 <: Function, F2 <: Function}
 
     if lharmonic < 0 
         @assert (Linearparams.lharmonic == -lharmonic) "Unexpected lharmonic"
@@ -54,7 +54,7 @@ function CCPrepare!(a::Float64,e::Float64,
         ω = - conj(ω)
     end
     # Computing the basis FT (k,J)
-    LR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFT,Linearparams)
+    LR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,coupling.basis,coupling.UFT,Linearparams)
 
     # Computing the response matrix
     LR.tabM!(ω,coupling.M,coupling.aMcoef,coupling.tabωminωmax,coupling.fht,Linearparams)
@@ -87,9 +87,9 @@ function CouplingCoefficient(a::Float64,e::Float64,
                              k1p::Int64,k2p::Int64,
                              lharmonic::Int64,
                              ω::ComplexF64,
-                             ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,
+                             ψ::F0,dψ::F1,d2ψ::F2,
                              coupling::BalescuLenardCoupling,
-                             Linearparams::LR.LinearParameters)::ComplexF64 where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function}
+                             Linearparams::LR.LinearParameters)::ComplexF64 where {F0 <: Function, F1 <: Function, F2 <: Function}
 
     """
     @ASSUMING the (k,J) part has been prepared
@@ -101,7 +101,7 @@ function CouplingCoefficient(a::Float64,e::Float64,
         k2p *= -1
     end
     # Computing the basis FT (k',J')
-    LR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFTp,Linearparams)
+    LR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,coupling.basis,coupling.UFTp,Linearparams)
 
     res = 0.0 + im*0.0
     for j = 1:Linearparams.nradial

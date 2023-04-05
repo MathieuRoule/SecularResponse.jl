@@ -24,9 +24,9 @@ function CCPrepare!(a::Float64,e::Float64,
                     k1::Int64,k2::Int64,
                     lharmonic::Int64,
                     ω::ComplexF64,
-                    ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,
+                    ψ::F0,dψ::F1,d2ψ::F2,
                     coupling::LandauBasisCoupling,
-                    Linearparams::LR.LinearParameters) where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function}
+                    Linearparams::LR.LinearParameters) where {F0 <: Function, F1 <: Function, F2 <: Function}
 
     if lharmonic < 0 
         @assert (Linearparams.lharmonic == -lharmonic) "Unexpected lharmonic"
@@ -35,7 +35,7 @@ function CCPrepare!(a::Float64,e::Float64,
         k2 *= -1
     end
     # Computing the basis FT (k,J) 
-    LR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFT,Linearparams)
+    LR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,coupling.basis,coupling.UFT,Linearparams)
 end
 
 """
@@ -51,9 +51,9 @@ function CouplingCoefficient(a::Float64,e::Float64,
                              k1p::Int64,k2p::Int64,
                              lharmonic::Int64,
                              ω::ComplexF64,
-                             ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,
+                             ψ::F0,dψ::F1,d2ψ::F2,
                              coupling::LandauBasisCoupling,
-                             Linearparams::LR.LinearParameters)::Float64 where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function}
+                             Linearparams::LR.LinearParameters)::Float64 where {F0 <: Function, F1 <: Function, F2 <: Function}
     """
     @ASSUMING the (k,J) part has been prepared
     """
@@ -65,7 +65,7 @@ function CouplingCoefficient(a::Float64,e::Float64,
         k2 *= -1
     end
     # Computing the basis FT (k',J')
-    LR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,d3ψ,coupling.basis,coupling.UFTp,Linearparams)
+    LR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,coupling.basis,coupling.UFTp,Linearparams)
 
     res = 0.0
     for j = 1:Linearparams.nradial

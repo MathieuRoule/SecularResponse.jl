@@ -14,7 +14,7 @@ include(inputfile)
 #####
 # Linear Response
 #####
-@time LinearResponse.RunLinearResponse(ψ,dψ,d2ψ,d3ψ,d4ψ,ndFdJ,FHT,basis,Linearparams)
+@time LinearResponse.RunLinearResponse(ψ,dψ,d2ψ,ndFdJ,FHT,basis,Linearparams)
 
 #####
 # Secular response
@@ -29,4 +29,4 @@ Lmin, Lmax, nL = 0.3, 1.5, 4
 const tabJL = SecularResponse.Grid2D(Jmin,Jmax,nJ,Lmin,Lmax,nL)
 
 
-totfric, totdiff, totflux, totdFdt = SecularResponse.GetSecular(tabJL,ψ,dψ,d2ψ,d3ψ,d4ψ,DF,ndFdJ,coupling,Secularparams)
+totfric, totdiff, totflux, totdFdt = SecularResponse.GetSecular(tabJL,ψ,dψ,d2ψ,DF,ndFdJ,coupling,Secularparams)
