@@ -30,7 +30,8 @@ end
 function SecularFilename(params::SecularParameters,couplingname::String)
 
     Linearparams = params.Linearparams
-    return params.secdir*couplingname*"_"*Linearparams.modelname*"_df_"*Linearparams.dfname*"_l_"*string(params.lharmonic)*"_n1_"*string(params.n1max)*"_rb_"*string(Linearparams.rbasis)*"_Kv_"*string(params.Kv)*".h5"
+    bparams = Linearparams.Basisparams
+    return params.secdir*couplingname*"_"*Linearparams.modelname*"_df_"*Linearparams.dfname*"_l_"*string(params.lharmonic)*"_n1_"*string(params.n1max)*"_rb_"*string(bparams["rb"])*"_Kv_"*string(params.Kv)*".h5"
 end
 
 """

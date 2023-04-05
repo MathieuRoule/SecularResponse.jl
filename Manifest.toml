@@ -186,9 +186,7 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LinearResponse]]
 deps = ["AstroBasis", "BenchmarkTools", "FiniteHilbertTransform", "HDF5", "LinearAlgebra", "OrbitalElements"]
-git-tree-sha1 = "572ad867c9b5e9f9acaa2d8313ccf97740a2707c"
-repo-rev = "main"
-repo-url = "../LinearResponse"
+path = "../LinearResponse"
 uuid = "b55f3ae4-0c12-11ed-076a-67f81ab2b5b1"
 version = "0.2.3"
 

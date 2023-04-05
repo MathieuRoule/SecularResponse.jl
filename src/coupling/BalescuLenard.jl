@@ -1,16 +1,15 @@
 
 
-struct BalescuLenardCoupling
+struct BalescuLenardCoupling{BT<:AB.AbstractAstroBasis,HT<:FHT.AbstractFHT} <: AbstractCoupling
 
     name::String 
 
-    basis::AB.BasisType
-    nradial::Int64
+    basis::BT
 
     UFT::Vector{Float64}
     UFTp::Vector{Float64}
 
-    fht::FHT.FHTtype
+    fht::HT
 
     aMcoef::Array{Float64,4}
     tabωminωmax::Matrix{Float64}
@@ -20,13 +19,15 @@ struct BalescuLenardCoupling
 
 end
 
-function BalescuLenardCouplingCreate(basis::AB.BasisType,fht::FHT.FHTtype,params::LR.LinearParameters;name::String="BalescuLenard")
+function BalescuLenardCouplingCreate(basis::BT,fht::HT,
+                                    params::LR.LinearParameters;
+                                    name::String="BalescuLenard") where {BT<:AB.AbstractAstroBasis, HT<:FHT.AbstractFHT}
 
-    nradial = basis.nmax
-
+    
+    nradial = params.nradial
     tabaMcoef, tabωminωmax = LR.StageAXi(params)
 
-    return BalescuLenardCoupling(name,basis,nradial,
+    return BalescuLenardCoupling(name,basis,
                                 zeros(Float64,nradial),zeros(Float64,nradial),
                                 fht,
                                 tabaMcoef,tabωminωmax,
@@ -40,9 +41,9 @@ function CCPrepare!(a::Float64,e::Float64,
                     k1::Int64,k2::Int64,
                     lharmonic::Int64,
                     ω::ComplexF64,
-                    ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,d4ψ::F4,
+                    ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,
                     coupling::BalescuLenardCoupling,
-                    Linearparams::LR.LinearParameters) where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
+                    Linearparams::LR.LinearParameters) where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function}
 
     if lharmonic < 0 
         @assert (Linearparams.lharmonic == -lharmonic) "Unexpected lharmonic"
@@ -86,9 +87,9 @@ function CouplingCoefficient(a::Float64,e::Float64,
                              k1p::Int64,k2p::Int64,
                              lharmonic::Int64,
                              ω::ComplexF64,
-                             ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,d4ψ::F4,
+                             ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,
                              coupling::BalescuLenardCoupling,
-                             Linearparams::LR.LinearParameters)::ComplexF64 where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
+                             Linearparams::LR.LinearParameters)::ComplexF64 where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function}
 
     """
     @ASSUMING the (k,J) part has been prepared

@@ -1,17 +1,18 @@
 
 
 
-struct LandauBasisCoupling
+struct LandauBasisCoupling{BT<:AB.AbstractAstroBasis} <: AbstractCoupling
 
     name::String 
 
-    basis::AB.BasisType
+    basis::BT
     
     UFT::Vector{Float64}
     UFTp::Vector{Float64}
 end
 
-function LandauBasisCouplingCreate(basis::AB.BasisType;name::String="LandauBasis")
+function LandauBasisCouplingCreate(basis::BT;
+                                   name::String="LandauBasis") where {BT<:AB.AbstractAstroBasis}
 
     return LandauBasisCoupling(name,basis,
                                zeros(Float64,basis.nmax),zeros(Float64,basis.nmax))
@@ -23,9 +24,9 @@ function CCPrepare!(a::Float64,e::Float64,
                     k1::Int64,k2::Int64,
                     lharmonic::Int64,
                     ω::ComplexF64,
-                    ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,d4ψ::F4,
+                    ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,
                     coupling::LandauBasisCoupling,
-                    Linearparams::LR.LinearParameters) where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
+                    Linearparams::LR.LinearParameters) where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function}
 
     if lharmonic < 0 
         @assert (Linearparams.lharmonic == -lharmonic) "Unexpected lharmonic"
@@ -50,9 +51,9 @@ function CouplingCoefficient(a::Float64,e::Float64,
                              k1p::Int64,k2p::Int64,
                              lharmonic::Int64,
                              ω::ComplexF64,
-                             ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,d4ψ::F4,
+                             ψ::F0,dψ::F1,d2ψ::F2,d3ψ::F3,
                              coupling::LandauBasisCoupling,
-                             Linearparams::LR.LinearParameters)::Float64 where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
+                             Linearparams::LR.LinearParameters)::Float64 where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function}
     """
     @ASSUMING the (k,J) part has been prepared
     """
