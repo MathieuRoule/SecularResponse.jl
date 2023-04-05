@@ -4,5 +4,8 @@
 .vscode/*
 **/.vscode/*
 
+.ipynb_checkpoints/*
+**/.ipynb_checkpoints/*
+
 examples/**/*.hf5
 examples/**/*.h5
