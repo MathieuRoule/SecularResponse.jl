@@ -19,9 +19,9 @@ struct BalescuLenardCoupling{BT<:AB.AbstractAstroBasis,HT<:FHT.AbstractFHT} <: A
 
 end
 
-function BalescuLenardCouplingCreate(basis::BT,fht::HT,
-                                     params::LR.LinearParameters;
-                                     name::String="BalescuLenard") where {BT<:AB.AbstractAstroBasis, HT<:FHT.AbstractFHT}
+function BalescuLenardCoupling(basis::BT,fht::HT,
+                               params::LR.LinearParameters;
+                               name::String="BalescuLenard") where {BT<:AB.AbstractAstroBasis, HT<:FHT.AbstractFHT}
 
     
     nradial = params.nradial
@@ -79,21 +79,18 @@ function CCPrepare!(a::Float64,e::Float64,
 end
 
 
-function CouplingCoefficient(a::Float64,e::Float64,
-                             Ω1::Float64,Ω2::Float64,
-                             ap::Float64,ep::Float64,
+function CouplingCoefficient(ap::Float64,ep::Float64,
                              Ω1p::Float64,Ω2p::Float64,
-                             k1::Int64,k2::Int64,
                              k1p::Int64,k2p::Int64,
                              lharmonic::Int64,
-                             ω::ComplexF64,
                              ψ::F0,dψ::F1,d2ψ::F2,
                              coupling::BalescuLenardCoupling,
                              Linearparams::LR.LinearParameters)::ComplexF64 where {F0 <: Function, F1 <: Function, F2 <: Function}
 
-    """
-    @ASSUMING the (k,J) part has been prepared
-    """
+    #####
+    # @ASSUMING the (k,J) part has been prepared
+    #####
+
     if lharmonic < 0 
         @assert (Linearparams.lharmonic == -lharmonic) "Unexpected lharmonic"
         # ψ^{n,-l}_k = ψ^{n,l}_{-k}

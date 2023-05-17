@@ -15,6 +15,7 @@ include("utils/Grids.jl")
 include("utils/IO.jl")
 
 include("CouplingCoef.jl")
+include("utils/ResonanceLines.jl")
 
 include("Prediction.jl")
 

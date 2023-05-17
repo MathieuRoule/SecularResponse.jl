@@ -18,7 +18,7 @@ function GetSecularResContrib(J::Float64,L::Float64,
     Ω₀ = Orbitalparams.Ω₀
 
     # Semi-major axis and eccentricity
-    a, e = OE.ComputeAEFromActions(ψ,dψ,d2ψ,J,L,Orbitalparams)
+    a, e = OE.ComputeAEFromActions(ψ,dψ,J,L,Orbitalparams)
     ((a <= 0.) || (e < 0.) || (e > 1.)) && error("Wrong domain ! For J = ",J," ; L = ",L," ; invertion gives a = ",a," ; e = ",e," ")
 
     # Frequency
@@ -91,7 +91,8 @@ function GetSecularResContrib(J::Float64,L::Float64,
         JacJ = (1/Ω1p)
 
         # Coupling coefficient
-        SQpsid = (abs(CouplingCoefficient(a,e,Ω1,Ω2,ap,ep,Ω1p,Ω2p,k1,k2,k1p,k2p,lharmonic,ωres,ψ,dψ,d2ψ,coupling,Linearparams)))^(2)
+        # The (k,J) and ωres parts are already prepared and stored in coupling
+        SQpsid = (abs(CouplingCoefficient(ap,ep,Ω1p,Ω2p,k1p,k2p,lharmonic,ψ,dψ,d2ψ,coupling,Linearparams)))^(2)
 
         commonpart = Jacv2 * JacJ * JacEL * RenormalizedJacαβ * SQpsid
 
