@@ -17,7 +17,7 @@ struct BalescuLenardCoupling{BT<:AB.AbstractAstroBasis,HT<:FHT.AbstractFHT} <: A
     IMat::Matrix{ComplexF64}
     UFTXi::Vector{ComplexF64}
 
-    ξ::FLoat64 # Active fraction
+    ξ::Float64 # Active fraction
 end
 
 function BalescuLenardCoupling(basis::BT,fht::HT,
