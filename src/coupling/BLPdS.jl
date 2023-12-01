@@ -1,15 +1,18 @@
 
 
-struct BLPdSCoupling <: AbstractCoupling
+struct BLPdSCoupling{BT<:AB.AbstractAstroBasis} <: AbstractCoupling
 
     name::String 
 
     LandauMultipole::LandauMultipoleCoupling
-    LandauBasis::LandauBasisCoupling
-    BalescuLenard::BalescuLenardCoupling
+    LandauBasis::LandauBasisCoupling{BT}
+    BalescuLenard::BalescuLenardCoupling{BT}
 end
 
-function BLPdSCoupling(LandauMultipole::LandauMultipoleCoupling,LandauBasis::LandauBasisCoupling,BalescuLenard::BalescuLenardCoupling;name::String="BL-PdS")
+function BLPdSCoupling(LandauMultipole::LandauMultipoleCoupling,
+                       LandauBasis::LandauBasisCoupling{BT},
+                       BalescuLenard::BalescuLenardCoupling{BT};
+                       name::String="BL-PdS") where {BT<:AB.AbstractAstroBasis}
 
     return BLPdSCoupling(name,LandauMultipole,LandauBasis,BalescuLenard)
 end

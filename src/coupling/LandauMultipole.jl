@@ -6,9 +6,7 @@ struct LandauMultipoleCoupling <: AbstractCoupling
 
     G::Float64
 
-    Ku::Int64
-    Kγ::Int64
-
+    Kw::Int64
 
     tabr ::Vector{Float64} # Positions of the first particle
     tabrp::Vector{Float64} # Positions of the second particle
@@ -16,10 +14,10 @@ struct LandauMultipoleCoupling <: AbstractCoupling
     tabgp::Vector{Float64} # Prefactors for the second particle
 end
 
-function LandauMultipoleCoupling(;name::String="LandauMultipole",G::Float64=1.0,Ku::Int64=32,Kγ::Int64=32)
-    return LandauMultipoleCoupling(name,G,Ku,Kγ,
-                                   zeros(Float64,Ku),zeros(Float64,Ku),
-                                   zeros(Float64,Ku),zeros(Float64,Ku))
+function LandauMultipoleCoupling(;name::String="LandauMultipole",G::Float64=1.0,Kw::Int64=32)
+    return LandauMultipoleCoupling(name,G,Kw,
+                                   zeros(Float64,Kw),zeros(Float64,Kw),
+                                   zeros(Float64,Kw),zeros(Float64,Kw))
 end
 
 function CCPrepare!(a::Float64,e::Float64,
@@ -47,15 +45,12 @@ function CouplingCoefficient(ap::Float64,ep::Float64,
     #####
     tabrtabg!(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,coupling.tabrp,coupling.tabgp,Linearparams.Orbitalparams)
 
-    pref = 4.0 / ((coupling.Ku*pi)^2)
+    pref = 4.0 / ((coupling.Kw*pi)^2)
     res = 0.0 
-    for j = 1:coupling.Ku
-        for i = 1:coupling.Ku
-            Ulrirj = InteractionPotentialFT(coupling.tabr[i],coupling.tabrp[j],lharmonic,coupling.Kγ,coupling.G)
-            if isnan(Ulrirj) || isinf(Ulrirj)
-                #println("Infinite or Nan Ul : ri = ",coupling.tabr[i]," ; rj = ",coupling.tabr[j])
-                res += 0.
-            else
+    for j = 1:coupling.Kw
+        for i = 1:coupling.Kw
+            Ulrirj = Ul(coupling.tabr[i],coupling.tabrp[j],lharmonic,coupling.G)
+            if !(isnan(Ulrirj) || isinf(Ulrirj))
                 res += coupling.tabg[i]*coupling.tabgp[j]*Ulrirj
             end
         end
@@ -64,31 +59,47 @@ function CouplingCoefficient(ap::Float64,ep::Float64,
     return res
 end
 
-function InteractionPotential(r::Float64,rp::Float64,
-                              γ::Float64,
-                              G::Float64=1.)::Float64
+"""
+    Regularized hypergeometric function pF̃q([1/2,1/2,1],[1-l,1+l],2a/(1+a))
+"""
+function regularized_pFq_special(l::Int64,a::Float64)
 
-    return - G  / sqrt(r^2 + rp^2 - 2*r*rp*cos(γ))
-end
+    @assert -1 < a <= 1 "`a` must lie in (-1,1]"
 
-function InteractionPotentialFT(r::Float64,rp::Float64,
-                                lharmonic::Int64,
-                                K::Int64,
-                                G::Float64=1.)::Float64
+    b = 2a/(1+a)
+    eE, eK = ellipe(b), ellipk(b)
 
-    # u : -1 → 1
-    # γ : 0 → π
-    # u = 2γ/π - 1, γ = π(u+1)/2
-    # dγ = π/2 du
-    # 1/π ∫_0^π  dγ  = 1/2 ∫_-1^1  du
-    function FTintegrand(u::Float64)::Float64
-        # push integration forward on two different quantities: Θ(u),Θ(u)/r^2(u)
-        γ = 0.5*pi*(u+1.0)
-
-        return InteractionPotential(r,rp,γ,G) * cos(lharmonic*γ)
+    if l == 0
+        return 2*eK/pi
+    elseif l == 1
+        return 2*(eK - (1+a)*eE)/(pi*a)
+    elseif l == 2
+        return 2*((4-a^2)*eK - 4*(1+a)*eE)/(3*pi*(a^2))
+    elseif l == 3
+        return 2*((32-17a^2)*eK - (32-9a^2)*(1+a)*eE)/(15*pi*a^3)
+    elseif l == 4
+        return 2*((384-304a^2+25a^4)*eK - 16*(24-13a^2)*(1+a)*eE)/(105*pi*a^4)
+    elseif l == 5
+        return 2*((2048-2144a^2+411a^4)*eK - (2048-1632a^2+147a^4)*(1+a)*eE)/(315*pi*a^5)
+    else
+        error("Unknown regularized_pFq_special for l>5.")
     end
+end
+"""
+    Fourier tranform in (configuration) angle of the interaction potential
+"""
+function Ul(r::Float64,rp::Float64,
+            lharmonic::Int64,
+            G::Float64=1.)::Float64
 
-    return 0.5 * OE.UnitarySimpsonIntegration(FTintegrand,K)
+    if (r<=0.) || (rp<= 0.)
+        return 0.
+    end
+    rm2 = r^2+rp^2
+    rm = sqrt(rm2)
+    a = 2r*rp/(rm2)
+
+    return - (G / rm) * regularized_pFq_special(lharmonic,a) / sqrt(1+a)
 end
 
 """
@@ -164,7 +175,7 @@ function tabrtabg!(a::Float64,e::Float64,
     tabg[K] = dθ1dw * cos(k1*θ1 + k2*θ2)
 
     # Reverse integration
-    for istep=(K-1):1
+    for istep=(K-1):-1:1
         # Step 1
         # Same point as the previous 4th step
         dθ1_1 = dw*dθ1dw

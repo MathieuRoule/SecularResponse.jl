@@ -6,15 +6,18 @@ struct LandauBasisCoupling{BT<:AB.AbstractAstroBasis} <: AbstractCoupling
     name::String 
 
     basis::BT
+
+    Kw::Int64
     
     UFT::Vector{Float64}
     UFTp::Vector{Float64}
 end
 
 function LandauBasisCoupling(basis::BT;
-                             name::String="LandauBasis") where {BT<:AB.AbstractAstroBasis}
+                             name::String="LandauBasis",
+                             Kw::Int64=32) where {BT<:AB.AbstractAstroBasis}
 
-    return LandauBasisCoupling(name,basis,
+    return LandauBasisCoupling(name,basis,Kw,
                                zeros(Float64,basis.nradial),zeros(Float64,basis.nradial))
 end
 

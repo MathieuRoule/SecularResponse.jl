@@ -6,6 +6,7 @@ import AstroBasis as AB
 import FiniteHilbertTransform as FHT
 import LinearResponse as LR
 using LinearAlgebra
+using SpecialFunctions
 using HDF5
 using ProgressMeter
 
