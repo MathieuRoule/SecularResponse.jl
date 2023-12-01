@@ -17,11 +17,12 @@ struct BalescuLenardCoupling{BT<:AB.AbstractAstroBasis,HT<:FHT.AbstractFHT} <: A
     IMat::Matrix{ComplexF64}
     UFTXi::Vector{ComplexF64}
 
+    ξ::FLoat64 # Active fraction
 end
 
 function BalescuLenardCoupling(basis::BT,fht::HT,
                                params::LR.LinearParameters;
-                               name::String="BalescuLenard") where {BT<:AB.AbstractAstroBasis, HT<:FHT.AbstractFHT}
+                               name::String="BalescuLenard",ξ::Float64=1.0) where {BT<:AB.AbstractAstroBasis, HT<:FHT.AbstractFHT}
 
     
     nradial = params.nradial
@@ -33,7 +34,8 @@ function BalescuLenardCoupling(basis::BT,fht::HT,
                                  tabaMcoef,tabωminωmax,
                                  zeros(ComplexF64,nradial,nradial),
                                  Matrix{ComplexF64}(I, nradial, nradial),
-                                 zeros(ComplexF64,nradial))
+                                 zeros(ComplexF64,nradial),
+                                 ξ)
 end
 
 function CCPrepare!(a::Float64,e::Float64,
@@ -68,7 +70,7 @@ function CCPrepare!(a::Float64,e::Float64,
         end
     end
 
-    tabXi = inv(Symmetric(coupling.IMat - coupling.M)) # @ TO IMPROVE -- in place
+    tabXi = inv(Symmetric(coupling.IMat - coupling.ξ * coupling.M))
     for j = 1:Linearparams.nradial
         xiloc = 0.0 + im*0.0
         for i = 1:Linearparams.nradial
