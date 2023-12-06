@@ -64,7 +64,7 @@ end
 """
 function regularized_pFq_special(l::Int64,a::Float64)
 
-    @assert -1 < a <= 1 "`a` must lie in (-1,1]"
+    @assert -1 < a <= 1 "a = $a must lie in (-1,1]"
 
     b = 2a/(1+a)
     eE, eK = ellipe(b), ellipk(b)
