@@ -71,18 +71,18 @@ function regularized_pFq_special(l::Int64,a::Float64)
 
     if l == 0
         return 2*eK/pi
-    elseif l == 1
+    elseif abs(l) == 1
         return 2*(eK - (1+a)*eE)/(pi*a)
-    elseif l == 2
+    elseif abs(l) == 2
         return 2*((4-a^2)*eK - 4*(1+a)*eE)/(3*pi*(a^2))
-    elseif l == 3
+    elseif abs(l) == 3
         return 2*((32-17a^2)*eK - (32-9a^2)*(1+a)*eE)/(15*pi*a^3)
-    elseif l == 4
+    elseif abs(l) == 4
         return 2*((384-304a^2+25a^4)*eK - 16*(24-13a^2)*(1+a)*eE)/(105*pi*a^4)
-    elseif l == 5
+    elseif abs(l) == 5
         return 2*((2048-2144a^2+411a^4)*eK - (2048-1632a^2+147a^4)*(1+a)*eE)/(315*pi*a^5)
     else
-        error("Unknown regularized_pFq_special for l>5.")
+        error("Unknown regularized_pFq_special for l = ",l)
     end
 end
 """
