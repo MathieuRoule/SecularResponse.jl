@@ -4,7 +4,8 @@ struct LandauMultipoleCoupling <: AbstractCoupling
 
     name::String 
 
-    G::Float64
+    G::Float64  # Gravitational coupling strength
+    ε::Float64  # Gravitational coupling softening length
 
     Kw::Int64
 
@@ -14,8 +15,10 @@ struct LandauMultipoleCoupling <: AbstractCoupling
     tabgp::Vector{Float64} # Prefactors for the second particle
 end
 
-function LandauMultipoleCoupling(;name::String="LandauMultipole",G::Float64=1.0,Kw::Int64=32)
-    return LandauMultipoleCoupling(name,G,Kw,
+function LandauMultipoleCoupling(;name::String="LandauMultipole",
+                                  G::Float64=1.0,ε::Float64=1.0e-3,
+                                  Kw::Int64=32)
+    return LandauMultipoleCoupling(name,G,ε,Kw,
                                    zeros(Float64,Kw),zeros(Float64,Kw),
                                    zeros(Float64,Kw),zeros(Float64,Kw))
 end
@@ -49,7 +52,7 @@ function CouplingCoefficient(ap::Float64,ep::Float64,
     res = 0.0 
     for j = 1:coupling.Kw
         for i = 1:coupling.Kw
-            Ulrirj = Ul(coupling.tabr[i],coupling.tabrp[j],lharmonic,coupling.G)
+            Ulrirj = Ul(coupling.tabr[i],coupling.tabrp[j],lharmonic,coupling.G,coupling.ε)
             if !(isnan(Ulrirj) || isinf(Ulrirj))
                 res += coupling.tabg[i]*coupling.tabgp[j]*Ulrirj
             end
@@ -90,14 +93,17 @@ end
 """
 function Ul(r::Float64,rp::Float64,
             lharmonic::Int64,
-            G::Float64=1.)::Float64
+            G::Float64=1.,ε::Float64=1.e-5)::Float64
 
     if (r<=0.) || (rp<= 0.)
         return 0.
     end
     rm2 = r^2+rp^2
     rm = sqrt(rm2)
+    ζ = ε / rm
     a = 2r*rp/(rm2)
+
+    @assert abs(a) < 1 + ζ^2 "a = $a must lie in ($((-1-ζ^2)),$((1+ζ^2))), does not work for r = $r and rp = $rp"
 
     return - (G / rm) * regularized_pFq_special(lharmonic,a) / sqrt(1+a)
 end

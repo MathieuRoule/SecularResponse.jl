@@ -20,22 +20,28 @@ struct BalescuLenardCoupling{BT<:AB.AbstractAstroBasis,HT<:FHT.AbstractFHT} <: A
     ξ::Float64 # Active fraction
 end
 
-function BalescuLenardCoupling(basis::BT,fht::HT,
-                               params::LR.LinearParameters;
-                               name::String="BalescuLenard",ξ::Float64=1.0) where {BT<:AB.AbstractAstroBasis, HT<:FHT.AbstractFHT}
-
-    
+function BalescuLenardCoupling(
+    basis::BT,
+    fht::HT,
+    params::LR.LinearParameters;
+    name::String="BalescuLenard",
+    ξ::Float64=1.0
+) where {BT<:AB.AbstractAstroBasis, HT<:FHT.AbstractFHT}
     nradial = params.nradial
     tabaMcoef, tabωminωmax = LR.StageAXi(params)
-
-    return BalescuLenardCoupling(name,basis,
-                                 zeros(Float64,nradial),zeros(Float64,nradial),
-                                 fht,
-                                 tabaMcoef,tabωminωmax,
-                                 zeros(ComplexF64,nradial,nradial),
-                                 Matrix{ComplexF64}(I, nradial, nradial),
-                                 zeros(ComplexF64,nradial),
-                                 ξ)
+    return BalescuLenardCoupling(
+        name,
+        basis,
+        zeros(Float64,nradial),
+        zeros(Float64,nradial),
+        fht,
+        tabaMcoef,
+        tabωminωmax,
+        zeros(ComplexF64,nradial,nradial),
+        Matrix{ComplexF64}(I, nradial, nradial),
+        zeros(ComplexF64,nradial),
+        ξ
+    )
 end
 
 function CCPrepare!(a::Float64,e::Float64,
