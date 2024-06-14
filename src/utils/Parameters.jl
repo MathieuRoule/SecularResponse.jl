@@ -36,11 +36,11 @@ function SecularParameters(basis::AB.AbstractAstroBasis;
                            secdir::String="",VERBOSE::Int64=0)
 
     # Resonance vectors
-    nbResPair, tabResPair = MakeTabResPair(Linearparams.lharmonic,n1max,basis.dimension)
+    nbResPair, tabResPair = MakeTabResPair(Linearparams.lharmonic,n1max,AB.dimension(basis))
 
     # !!! CHECH COMPATIBILITY !!! TO ADD
 
     return SecularParameters(Linearparams,
-                      Linearparams.lharmonic,n1max,basis.dimension,
+                      Linearparams.lharmonic,n1max,AB.dimension(basis),
                       MTOT,N,nbResPair,tabResPair,Kv,VMAPN,dJ,dL,secdir,VERBOSE)
 end
