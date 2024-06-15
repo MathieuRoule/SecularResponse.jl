@@ -5,10 +5,13 @@
 Secular evolution (Flux, Friction, Diffusion) at given actions (J_r,L)
 on the harmonic l (decoupled harmonic numbers).
 """
-function GetResonanceLines(tabωstart::Vector{ComplexF64},
-                            ψ::F0,dψ::F1,d2ψ::F2,
-                            coupling::BalescuLenardCoupling,
-                            params::SecularParameters) where {F0 <: Function, F1 <: Function, F2 <: Function}
+function GetResonanceLines(
+    tabωstart::Vector{ComplexF64},
+    model::Potential,
+    coupling::BalescuLenardCoupling,
+    params::SecularParameters;
+    store::Bool=false
+)
 
     # check wmat directory before proceeding (save time if not.)
     CheckValidDirectory(params.secdir) || error("False directory")
@@ -36,25 +39,29 @@ function GetResonanceLines(tabωstart::Vector{ComplexF64},
         # Considered resonance pair
         k1, k2   = tabResVec[1,ires], tabResVec[2,ires]
 
+        res = Resonance(k1,k2,model,Orbitalparams)
+
         for imode = 1:nmodes
             # Considered mode
             ωM = ωModes[imode]
             ω0, γ = real(ωM), imag(ωM)
 
             ind = (ires-1)*nmodes+imode
-            OE.GetResLineJL!(ω0-γ,k1,k2,ψ,dψ,d2ψ,view(tabJLreslines,:,:,1,ind),Orbitalparams)
-            OE.GetResLineJL!(ω0,k1,k2,ψ,dψ,d2ψ,view(tabJLreslines,:,:,2,ind),Orbitalparams)
-            OE.GetResLineJL!(ω0+γ,k1,k2,ψ,dψ,d2ψ,view(tabJLreslines,:,:,3,ind),Orbitalparams)
+            actions_resonance_line!(view(tabJLreslines,:,:,1,ind),ω0-γ,res,model,Orbitalparams)
+            actions_resonance_line!(view(tabJLreslines,:,:,2,ind),ω0,res,model,Orbitalparams)
+            actions_resonance_line!(view(tabJLreslines,:,:,3,ind),ω0+γ,res,model,Orbitalparams)
             tabresonances[1,ind], tabresonances[2,ind] = k1, k2
         end
     end
 
-    outputfilename = SecularFilename(params,coupling.name)
-    h5open(outputfilename, "r+") do file
-        # Resonance vectors
-        write(file,"tabResVec",tabresonances)
-        # Resonance lines
-        write(file,"tabJLreslines",tabJLreslines)
+    if store
+        outputfilename = SecularFilename(params,coupling.name)
+        h5open(outputfilename, "r+") do file
+            # Resonance vectors
+            write(file,"tabResVec",tabresonances)
+            # Resonance lines
+            write(file,"tabJLreslines",tabJLreslines)
+        end
     end
 
     return tabresonances, tabJLreslines

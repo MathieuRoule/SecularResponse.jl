@@ -2,58 +2,72 @@
 
 struct LandauMultipoleCoupling <: AbstractCoupling
 
-    name::String 
-
     G::Float64  # Gravitational coupling strength
     ε::Float64  # Gravitational coupling softening length
 
     Kw::Int64
 
-    tabr ::Vector{Float64} # Positions of the first particle
+    tabr::Vector{Float64} # Positions of the first particle
     tabrp::Vector{Float64} # Positions of the second particle
-    tabg ::Vector{Float64} # Prefactors for the first particle
+    tabg::Vector{Float64} # Prefactors for the first particle
     tabgp::Vector{Float64} # Prefactors for the second particle
 end
 
-function LandauMultipoleCoupling(;name::String="LandauMultipole",
-                                  G::Float64=1.0,ε::Float64=1.0e-3,
-                                  Kw::Int64=32)
-    return LandauMultipoleCoupling(name,G,ε,Kw,
-                                   zeros(Float64,Kw),zeros(Float64,Kw),
-                                   zeros(Float64,Kw),zeros(Float64,Kw))
+function LandauMultipoleCoupling(;G::Float64=1.0, ε::Float64=1.0e-3, Kw::Int64=32)
+    return LandauMultipoleCoupling(
+        G,
+        ε,
+        Kw,
+        zeros(Float64,Kw),
+        zeros(Float64,Kw),
+        zeros(Float64,Kw),
+        zeros(Float64,Kw)
+    )
 end
 
-function CCPrepare!(a::Float64,e::Float64,
-                    Ω1::Float64,Ω2::Float64,
-                    k1::Int64,k2::Int64,
-                    lharmonic::Int64,
-                    ω::ComplexF64,
-                    ψ::F0,dψ::F1,d2ψ::F2,
-                    coupling::LandauMultipoleCoupling,
-                    Linearparams::LR.LinearParameters) where {F0 <: Function, F1 <: Function, F2 <: Function}
-
-    tabrtabg!(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,coupling.tabr,coupling.tabg,Linearparams.Orbitalparams)
+function CCPrepare!(
+    a::Float64,
+    e::Float64,
+    Ω1::Float64,
+    Ω2::Float64,
+    k1::Int64,
+    k2::Int64,
+    lharmonic::Int64,
+    ω::ComplexF64,
+    model::Potential,
+    coupling::LandauMultipoleCoupling,
+    Linearparams::LR.LinearParameters
+)
+    tabr, tabg = coupling.tabr, coupling.tabg
+    Orbitalparams = Linearparams.Orbitalparams
+    tabrtabg!(a, e, Ω1, Ω2, k1, k2, model, tabr, tabg, Orbitalparams)
 end
 
-function CouplingCoefficient(ap::Float64,ep::Float64,
-                             Ω1p::Float64,Ω2p::Float64,
-                             k1p::Int64,k2p::Int64,
-                             lharmonic::Int64,
-                             ψ::F0,dψ::F1,d2ψ::F2,
-                             coupling::LandauMultipoleCoupling,
-                             Linearparams::LR.LinearParameters)::Float64 where {F0 <: Function, F1 <: Function, F2 <: Function}
-
+function CouplingCoefficient(
+    ap::Float64,
+    ep::Float64,
+    Ω1p::Float64,
+    Ω2p::Float64,
+    k1p::Int64,
+    k2p::Int64,
+    lharmonic::Int64,
+    model::Potential,
+    coupling::LandauMultipoleCoupling,
+    Linearparams::LR.LinearParameters
+)
     #####
     # @ASSUMING the (k,J) part has been prepared
     #####
-    tabrtabg!(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,coupling.tabrp,coupling.tabgp,Linearparams.Orbitalparams)
+    tabrp, tabgp = coupling.tabrp, coupling.tabgp
+    Orbitalparams = Linearparams.Orbitalparams
+    tabrtabg!(ap, ep, Ω1p, Ω2p, k1p, k2p, model, tabrp, tabgp, Orbitalparams)
 
     pref = 4.0 / ((coupling.Kw*pi)^2)
     res = 0.0 
     for j = 1:coupling.Kw
         for i = 1:coupling.Kw
             Ulrirj = Ul(coupling.tabr[i],coupling.tabrp[j],lharmonic,coupling.G,coupling.ε)
-            if !(isnan(Ulrirj) || isinf(Ulrirj))
+            if isfinite(Ulrirj)
                 res += coupling.tabg[i]*coupling.tabgp[j]*Ulrirj
             end
         end
@@ -63,9 +77,9 @@ function CouplingCoefficient(ap::Float64,ep::Float64,
 end
 
 """
-    Regularized hypergeometric function pF̃q([1/2,1/2,1],[1-l,1+l],2a/(1+a))
+    Regularized hypergeometric function pF̃q([1/2,1/2,1], [1-l,1+l], 2a/(1+a))
 """
-function regularized_pFq_special(l::Int64,a::Float64)
+function regularized_pFq_special(l::Int64, a::Float64)
 
     @assert -1 < a <= 1 "a = $a must lie in (-1,1]"
 
@@ -91,19 +105,16 @@ end
 """
     Fourier tranform in (configuration) angle of the interaction potential
 """
-function Ul(r::Float64,rp::Float64,
-            lharmonic::Int64,
-            G::Float64=1.,ε::Float64=1.e-5)::Float64
+function Ul(r::Float64, rp::Float64, lharmonic::Int64, G::Float64=1.,ε::Float64=1.e-5)
 
     if (r<=0.) || (rp<= 0.)
         return 0.
     end
-    rm2 = r^2+rp^2
+    rm2 = r^2 + rp^2 + ε^2
     rm = sqrt(rm2)
-    ζ = ε / rm
     a = 2r*rp/(rm2)
 
-    @assert abs(a) < 1 + ζ^2 "a = $a must lie in ($((-1-ζ^2)),$((1+ζ^2))), does not work for r = $r and rp = $rp"
+    @assert abs(a) < 1 "a = $a must lie in ]-1,1[, does not work for r = $r and rp = $rp"
 
     return - (G / rm) * regularized_pFq_special(lharmonic,a) / sqrt(1+a)
 end
@@ -113,36 +124,43 @@ end
 
 Integrand computation for FT of interaction potential
 """
-function rdθdw(w::Float64,
-               a::Float64,e::Float64,L::Float64,
-               Ω1::Float64,Ω2::Float64,
-               ψ::F0,dψ::F1,d2ψ::F2,
-               params::OE.OrbitalParameters) where {F0 <: Function, F1 <: Function, F2 <: Function}
-
-
+function rdθdw(
+    w::Float64,
+    a::Float64,
+    e::Float64,
+    model::Potential,
+    params::OrbitalParameters;
+    kwargs...
+)
     # Current location of the radius, r=r(w)
-    rval = OE.ru(w,a,e)
+    rval = radius_from_anomaly(w,a,e,model,params)
 
     # Current value of the radial frequency integrand (almost dθ₁₂/dw)
-    gval = OE.ΘAE(ψ,dψ,d2ψ,w,a,e,params)
+    dθ1dw, dθ2dw = angles_gradient(w, a, e, model, params; kwargs...)
 
     # the velocity for integration (dθ1dw, dθ2dw)
-    return rval, Ω1*gval, (Ω2 - L/(rval^(2)))*gval
+    return rval, dθ1dw, dθ2dw
 end
 
-function tabrtabg!(a::Float64,e::Float64,
-                   Ω1::Float64,Ω2::Float64,
-                   k1::Int64,k2::Int64,
-                   ψ::F0,dψ::F1,d2ψ::F2,
-                   tabr::Vector{Float64},tabg::Vector{Float64},
-                   params::OE.OrbitalParameters) where {F0 <: Function, F1 <: Function, F2 <: Function}
+function tabrtabg!(
+    a::Float64,
+    e::Float64,
+    Ω1::Float64,
+    Ω2::Float64,
+    k1::Int64,
+    k2::Int64,
+    model::Potential,
+    tabr::Vector{Float64},
+    tabg::Vector{Float64},
+    params::OrbitalParameters
+)
 
     # Number of middle points
     K = length(tabr)
     @assert length(tabg) == K "tabr and tabg have different length."
 
     # need angular momentum
-    Lval = OE.LFromAE(ψ,dψ,a,e,params)
+    _, Lval = EL_from_ae(a,e,model,params)
 
     # Caution : Reverse integration (lower error at apocenter than pericenter)
     # -> Result to multiply by -1
@@ -155,12 +173,12 @@ function tabrtabg!(a::Float64,e::Float64,
     # Reverse integration, starting at apocenter
     w, θ1, θ2 = 1.0, pi, 0.0
     # Step 1
-    r, dθ1dw, dθ2dw = rdθdw(w,a,e,Lval,Ω1,Ω2,ψ,dψ,d2ψ,params)
+    r, dθ1dw, dθ2dw = rdθdw(w, a, e, model, params; L=Lval, Ω1=Ω1, Ω2=Ω2)
     dθ1_1 = 0.5*dw*dθ1dw
     dθ2_1 = 0.5*dw*dθ2dw
     # Step 2
     w += 0.25*dw
-    r, dθ1dw, dθ2dw = rdθdw(w,a,e,Lval,Ω1,Ω2,ψ,dψ,d2ψ,params)
+    r, dθ1dw, dθ2dw = rdθdw(w, a, e, model, params; L=Lval, Ω1=Ω1, Ω2=Ω2)
     dθ1_2 = 0.5*dw*dθ1dw
     dθ2_2 = 0.5*dw*dθ2dw
     # Step 3
@@ -168,7 +186,7 @@ function tabrtabg!(a::Float64,e::Float64,
     dθ2_3 = dθ2_2
     # Step 4
     w += 0.25*dw
-    r, dθ1dw, dθ2dw = rdθdw(w,a,e,Lval,Ω1,Ω2,ψ,dψ,d2ψ,params)
+    r, dθ1dw, dθ2dw = rdθdw(w, a, e, model, params; L=Lval, Ω1=Ω1, Ω2=Ω2)
     dθ1_4 = 0.5*dw*dθ1dw
     dθ2_4 = 0.5*dw*dθ2dw
     #####
@@ -188,7 +206,7 @@ function tabrtabg!(a::Float64,e::Float64,
         dθ2_1 = dw*dθ2dw
         # Step 2
         w += 0.5*dw
-        r, dθ1dw, dθ2dw = rdθdw(w,a,e,Lval,Ω1,Ω2,ψ,dψ,d2ψ,params)
+        r, dθ1dw, dθ2dw = rdθdw(w, a, e, model, params; L=Lval, Ω1=Ω1, Ω2=Ω2)
         dθ1_2 = dw*dθ1dw
         dθ2_2 = dw*dθ2dw
         # Step 3
@@ -196,7 +214,7 @@ function tabrtabg!(a::Float64,e::Float64,
         dθ2_3 = dθ2_2
         # Step 4
         w += 0.5*dw
-        r, dθ1dw, dθ2dw = rdθdw(w,a,e,Lval,Ω1,Ω2,ψ,dψ,d2ψ,params)
+        r, dθ1dw, dθ2dw = rdθdw(w, a, e, model, params; L=Lval, Ω1=Ω1, Ω2=Ω2)
         dθ1_4 = dw*dθ1dw
         dθ2_4 = dw*dθ2dw
         # Update the positions using RK4-like sum (Simpson's 1/3 rule)

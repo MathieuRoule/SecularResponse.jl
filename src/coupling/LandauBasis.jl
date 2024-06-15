@@ -22,14 +22,19 @@ function LandauBasisCoupling(basis::BT;
 end
 
 
-function CCPrepare!(a::Float64,e::Float64,
-                    Ω1::Float64,Ω2::Float64,
-                    k1::Int64,k2::Int64,
-                    lharmonic::Int64,
-                    ω::ComplexF64,
-                    ψ::F0,dψ::F1,d2ψ::F2,
-                    coupling::LandauBasisCoupling,
-                    Linearparams::LR.LinearParameters) where {F0 <: Function, F1 <: Function, F2 <: Function}
+function CCPrepare!(
+    a::Float64,
+    e::Float64,
+    Ω1::Float64,
+    Ω2::Float64,
+    k1::Int64,
+    k2::Int64,
+    lharmonic::Int64,
+    ω::ComplexF64,
+    model::Potential,
+    coupling::LandauBasisCoupling,
+    Linearparams::LR.LinearParameters
+)
 
     if lharmonic < 0 
         @assert (Linearparams.lharmonic == -lharmonic) "Unexpected lharmonic"
@@ -38,7 +43,13 @@ function CCPrepare!(a::Float64,e::Float64,
         k2 *= -1
     end
     # Computing the basis FT (k,J) 
-    LR.WBasisFT(a,e,Ω1,Ω2,k1,k2,ψ,dψ,d2ψ,coupling.basis,coupling.UFT,Linearparams)
+    function basisft_integrand(r::Float64)
+        # collect the basis elements (in place!)
+        AB.tabUl!(coupling.basis, Linearparams.lharmonic, r)
+        return coupling.basis.tabUl
+    end
+    _, L = EL_from_ae(a, e, model, Linearparams.Orbitalparams)
+    LR.angle_fouriertransform!(coupling.UFT, basisft_integrand, a, e, k1, k2, model, Linearparams, L=L, Ω1=Ω1, Ω2=Ω2)
 end
 
 """
@@ -46,13 +57,18 @@ end
 
 Landau coupling coefficient using the basis elements
 """
-function CouplingCoefficient(ap::Float64,ep::Float64,
-                             Ω1p::Float64,Ω2p::Float64,
-                             k1p::Int64,k2p::Int64,
-                             lharmonic::Int64,
-                             ψ::F0,dψ::F1,d2ψ::F2,
-                             coupling::LandauBasisCoupling,
-                             Linearparams::LR.LinearParameters)::Float64 where {F0 <: Function, F1 <: Function, F2 <: Function}
+function CouplingCoefficient(
+    ap::Float64,
+    ep::Float64,
+    Ω1p::Float64,
+    Ω2p::Float64,
+    k1p::Int64,
+    k2p::Int64,
+    lharmonic::Int64,
+    model::Potential,
+    coupling::LandauBasisCoupling,
+    Linearparams::LR.LinearParameters
+)
     #####
     # @ASSUMING the (k,J) part has been prepared
     #####
@@ -64,7 +80,13 @@ function CouplingCoefficient(ap::Float64,ep::Float64,
         k2p *= -1
     end
     # Computing the basis FT (k',J')
-    LR.WBasisFT(ap,ep,Ω1p,Ω2p,k1p,k2p,ψ,dψ,d2ψ,coupling.basis,coupling.UFTp,Linearparams)
+    function basisft_integrand(r::Float64)
+        # collect the basis elements (in place!)
+        AB.tabUl!(coupling.basis, Linearparams.lharmonic, r)
+        return coupling.basis.tabUl
+    end
+    _, Lp = EL_from_ae(ap, ep, model, Linearparams.Orbitalparams)
+    LR.angle_fouriertransform!(coupling.UFTp, basisft_integrand, ap, ep, k1p, k2p, model, Linearparams, L=Lp, Ω1=Ω1p, Ω2=Ω2p)
 
     res = 0.0
     for j = 1:Linearparams.nradial

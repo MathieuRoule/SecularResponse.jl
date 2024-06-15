@@ -4,49 +4,54 @@
 
 Resonances (k,kp) contribution to the secular evolution on  harmonic l.
 """
-function GetSecularResContrib(J::Float64,L::Float64,
-                              k1::Int64,k2::Int64,
-                              k1p::Int64,k2p::Int64,
-                              lharmonic::Int64,
-                              ψ::F0,dψ::F1,d2ψ::F2,
-                              DF::F3,ndFdJ::F4,
-                              coupling::AbstractCoupling,
-                              params::SecularParameters)  where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
+function GetSecularResContrib(
+    J::Float64,
+    L::Float64,
+    k1::Int64,
+    k2::Int64,
+    k1p::Int64,
+    k2p::Int64,
+    lharmonic::Int64,
+    model::Potential,
+    DF::F0,ndFdJ::F1,
+    coupling::AbstractCoupling,
+    params::SecularParameters
+)  where {F0 <: Function, F1 <: Function}
 
     Linearparams = params.Linearparams
     Orbitalparams = Linearparams.Orbitalparams
-    Ω₀ = Orbitalparams.Ω₀
+    Ω₀ = frequency_scale(model)
 
     # Semi-major axis and eccentricity
-    a, e = OE.ComputeAEFromActions(ψ,dψ,J,L,Orbitalparams)
+    a, e = ae_from_actions(J,L,model,Orbitalparams)
     ((a <= 0.) || (e < 0.) || (e > 1.)) && error("Wrong domain ! For J = ",J," ; L = ",L," ; invertion gives a = ",a," ; e = ",e," ")
 
     # Frequency
-    Ω1, Ω2 = OE.ComputeFrequenciesAE(ψ,dψ,d2ψ,a,e,Orbitalparams)
+    Ω1, Ω2 = frequencies_from_ae(a,e,model,Orbitalparams)
     kdotΩ = k1*Ω1 + k2*Ω2
     ωres = kdotΩ + 0.0*im
     
     # k' related values
-    ωminp, ωmaxp = OE.Findωminωmax(k1p,k2p,dψ,d2ψ,Orbitalparams)
+    resp = Resonance(k1p,k2p,model,Orbitalparams)
     # Resonance u'
-    upres = real(OE.Getϖ(ωres/Ω₀,ωminp,ωmaxp))
+    upres = real(OrbitalElements.rescaled_ϖ(ωres/Ω₀,resp))
 
     # If no possible resonance (k,k')
     ( -1. < upres < 1.) || (return 0., 0., 0.)
 
     # Functions value in J
-    Eval, Lval = OE.ELFromAE(ψ,dψ,a,e,Orbitalparams)
+    Eval, Lval = EL_from_ae(a,e,model,Orbitalparams)
     valF = DF(Eval,Lval)
     valkdFdJ = ndFdJ(k1,k2,Eval,Lval,kdotΩ)
 
     # Prepare the stable part of the coupling coefficients (not changing with J')
-    CCPrepare!(a,e,Ω1,Ω2,k1,k2,lharmonic,ωres,ψ,dψ,d2ψ,coupling,Linearparams)
+    CCPrepare!(a,e,Ω1,Ω2,k1,k2,lharmonic,ωres,model,coupling,Linearparams)
 
     # Initialising the contribution
     fric, diff, flux = 0.0, 0.0, 0.0
 
     # Integration interval (along the resonance line)
-    vpmin, vpmax = OE.FindVminVmax(upres,k1p,k2p,dψ,d2ψ,ωminp,ωmaxp,Orbitalparams)
+    vpmin, vpmax = v_boundaries(upres,resp,model,Orbitalparams)
 
     # Integration step
     δv2 = 1.0/params.Kv
@@ -55,21 +60,21 @@ function GetSecularResContrib(J::Float64,L::Float64,
 
         # get the current v value
         v2   = δv2*(kvval-0.5)
-        vpval = LR.vFromvp(v2,vpmin,vpmax,params.VMAPN)
+        vpval, dvpdv2 = v_from_vp_derivative(v2,vpmin,vpmax,n=params.VMAPN)
 
         ####
         # (ures',v') → (a',e')
         ####
         # (u',v') → (α',β')
-        αp, βp = OE.αβFromUV(upres,vpval,k1p,k2p,ωminp,ωmaxp)
+        αp, βp = αβ_from_uv(upres,vpval,resp)
         # (α',β') → (Ω1',Ω2')
-        Ω1p, Ω2p = OE.FrequenciesFromαβ(αp,βp,Ω₀)
+        Ω1p, Ω2p = frequencies_from_αβ(αp,βp,model)
         kdotΩp = k1p*Ω1p + k2p*Ω2p
-        # (Ω1p,Ω2p) → (ap,ep)
-        ap, ep = OE.ComputeAEFromFrequencies(ψ,dψ,d2ψ,Ω1p,Ω2p,Orbitalparams)
+        # (α',β') → (a',e')
+        ap, ep = ae_from_αβ(αp,βp,model,Orbitalparams)
 
         # need (E,L): this has some relatively expensive switches
-        Evalp, Lvalp = OE.ELFromAE(ψ,dψ,ap,ep,Orbitalparams)
+        Evalp, Lvalp = EL_from_ae(ap,ep,model,Orbitalparams)
         valFp = DF(Evalp,Lvalp)
         valkdFdJp = ndFdJ(k1p,k2p,Evalp,Lvalp,kdotΩp)
 
@@ -78,21 +83,23 @@ function GetSecularResContrib(J::Float64,L::Float64,
         #####
 
         # (u,v2) → (u,v') : dv'/ dv2
-        Jacv2 = LR.DvDvp(v2,vpmin,vpmax,params.VMAPN)
+        Jacv2 = dvpdv2
 
         # (u',v') → (α',β').
         # Renormalized. (2/(ωmax-ωmin) * |∂(α',β')/∂(u',v')|)
-        RenormalizedJacαβ = OE.RenormalizedJacUVToαβ(k1p,k2p,upres,vpval)
+        ωminp, ωmaxp = frequency_extrema(resp)
+        RenormalizedJacαβ = (2/(ωmaxp-ωminp)) * uv_to_αβ_jacobian(upres,vpval,resp)
 
-        # (α',β') → (E',L') : |∂(E',L')/ ∂(α',β')| 
-        JacEL = OE.JacαβToELAE(ψ,dψ,d2ψ,ap,ep,Orbitalparams)
+        # (α',β') → (E',L') : |∂(E',L')/ ∂(α',β')| = |∂(E',L')/ ∂(a',e')| / |∂(α',β')/∂(a',e')|
+        # compute the Jacobian of the (α,β) ↦ (E,L) 
+        JacEL = ae_to_EL_jacobian(ap,ep,model,Orbitalparams)/ae_to_αβ_jacobian(ap,ep,model,Orbitalparams)
 
         # (E',L') → (Jr',L') : |∂(Jr,L)/ ∂(E,L)|
         JacJ = (1/Ω1p)
 
         # Coupling coefficient
         # The (k,J) and ωres parts are already prepared and stored in coupling
-        SQpsid = (abs(CouplingCoefficient(ap,ep,Ω1p,Ω2p,k1p,k2p,lharmonic,ψ,dψ,d2ψ,coupling,Linearparams)))^(2)
+        SQpsid = (abs(CouplingCoefficient(ap,ep,Ω1p,Ω2p,k1p,k2p,lharmonic,model,coupling,Linearparams)))^(2)
 
         commonpart = Jacv2 * JacJ * JacEL * RenormalizedJacαβ * SQpsid
 
@@ -131,11 +138,15 @@ on the harmonic l (decoupled harmonic numbers).
 
 @ATTENTION: We take into account both contribution from lharmonic and -lharmonic
 """
-function GetSecular(J::Float64,L::Float64,
-                    ψ::F0,dψ::F1,d2ψ::F2,
-                    DF::F3,ndFdJ::F4,
-                    coupling::AbstractCoupling,
-                    params::SecularParameters)  where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
+function GetSecular(
+    J::Float64,
+    L::Float64,
+    model::Potential,
+    DF::F0,
+    ndFdJ::F1,
+    coupling::AbstractCoupling,
+    params::SecularParameters
+)  where {F0 <: Function, F1 <: Function}
 
     # Initialising the contribution
     totfric = zeros(Float64,2)
@@ -157,11 +168,11 @@ function GetSecular(J::Float64,L::Float64,
 
         # Computing the associated contribution for l = lharmonic
         fric, diff, flux = GetSecularResContrib(J,L,k1,k2,k1p,k2p,params.lharmonic,
-                                                ψ,dψ,d2ψ,DF,ndFdJ,coupling,params)
+                                                model,DF,ndFdJ,coupling,params)
         _, _, fluxdJ = GetSecularResContrib(JdJ,L,k1,k2,k1p,k2p,params.lharmonic,
-                                                ψ,dψ,d2ψ,DF,ndFdJ,coupling,params)         
+                                                model,DF,ndFdJ,coupling,params)         
         _, _, fluxdL = GetSecularResContrib(J,LdL,k1,k2,k1p,k2p,params.lharmonic,
-                                                ψ,dψ,d2ψ,DF,ndFdJ,coupling,params)
+                                                model,DF,ndFdJ,coupling,params)
                                                 
         # Adding the contributions
         totfric[1] += k1 * fric
@@ -180,11 +191,11 @@ function GetSecular(J::Float64,L::Float64,
 
         # Computing the associated contribution for l = -lharmonic
         fric, diff, flux = GetSecularResContrib(J,L,-k1,-k2,-k1p,-k2p,-params.lharmonic,
-                                                ψ,dψ,d2ψ,DF,ndFdJ,coupling,params)
+                                                model,DF,ndFdJ,coupling,params)
         _, _, fluxdJ = GetSecularResContrib(JdJ,L,-k1,-k2,-k1p,-k2p,-params.lharmonic,
-                                                ψ,dψ,d2ψ,DF,ndFdJ,coupling,params)
+                                                model,DF,ndFdJ,coupling,params)
         _, _, fluxdL = GetSecularResContrib(J,LdL,-k1,-k2,-k1p,-k2p,-params.lharmonic,
-                                                ψ,dψ,d2ψ,DF,ndFdJ,coupling,params)
+                                                model,DF,ndFdJ,coupling,params)
 
         # Adding the contributions
         totfric[1] += (-k1) * fric
@@ -221,11 +232,15 @@ end
 Secular evolution (Flux, Friction, Diffusion) at given actions (J_r,L)
 on the harmonic l (decoupled harmonic numbers).
 """
-function GetSecular(tabJL::Matrix{Float64},
-                    ψ::F0,dψ::F1,d2ψ::F2,
-                    DF::F3,ndFdJ::F4,
-                    coupling::AbstractCoupling,
-                    params::SecularParameters)  where {F0 <: Function, F1 <: Function, F2 <: Function, F3 <: Function, F4 <: Function}
+function GetSecular(
+    tabJL::Matrix{Float64},
+    model::Potential,
+    DF::F0,
+    ndFdJ::F1,
+    coupling::AbstractCoupling,
+    params::SecularParameters;
+    store::Bool=false
+)  where {F0 <: Function, F1 <: Function}
 
     # check wmat directory before proceeding (save time if not.)
     CheckValidDirectory(params.secdir) || error("False directory")
@@ -247,7 +262,7 @@ function GetSecular(tabJL::Matrix{Float64},
         J, L = tabJL[1,k], tabJL[2,k]
 
         t = Threads.threadid()
-        fric, diff, flux, dFdt = GetSecular(J,L,ψ,dψ,d2ψ,DF,ndFdJ,couplings[t],params)
+        fric, diff, flux, dFdt = GetSecular(J,L,model,DF,ndFdJ,couplings[t],params)
 
         # Evolution
         totfric[1,k] = fric[1]
@@ -264,16 +279,18 @@ function GetSecular(tabJL::Matrix{Float64},
         next!(p)
     end
 
-    outputfilename = SecularFilename(params,coupling.name)
-    h5open(outputfilename, "w") do file
-        # Basis results
-        write(file,"tabJL",tabJL)
-        write(file,"totfric",totfric)
-        write(file,"totdiff",totdiff)
-        write(file,"totflux",totflux)
-        write(file,"dFdt",totdFdt)
-        # Parameters
-        WriteParameters(file,params)
+    if store
+        outputfilename = SecularFilename(params,coupling.name)
+        h5open(outputfilename, "w") do file
+            # Basis results
+            write(file,"tabJL",tabJL)
+            write(file,"totfric",totfric)
+            write(file,"totdiff",totdiff)
+            write(file,"totflux",totflux)
+            write(file,"dFdt",totdFdt)
+            # Parameters
+            WriteParameters(file,params)
+        end
     end
 
     return totfric, totdiff, totflux, totdFdt

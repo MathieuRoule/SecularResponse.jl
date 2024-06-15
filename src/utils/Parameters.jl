@@ -27,8 +27,8 @@ struct SecularParameters
     VERBOSE::Int64
 end
 
-function SecularParameters(basis::AB.AbstractAstroBasis;
-                           Linearparams::LR.LinearParameters=LR.LinearParameters(),
+function SecularParameters(basis::AB.AbstractAstroBasis,
+                           Linearparams::LR.LinearParameters;
                            n1max::Int64=10,
                            MTOT::Float64=1.,N::Int64=10^4,
                            Kv::Int64=200,VMAPN::Int64=2,
